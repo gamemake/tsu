@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 
-#include "../Private/TsuModule.h"
+#include "TsuModule.h"
 #include "TsuParsedFile.h"
 
 #include "Engine/BlueprintGeneratedClass.h"

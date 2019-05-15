@@ -2,11 +2,11 @@
 
 #include "CoreMinimal.h"
 
-#include "../Private/TsuContextCallback.h"
+#include "TsuContextCallback.h"
 #include "../Private/TsuInspector.h"
-#include "../Private/TsuModule.h"
-#include "../Private/TsuTimer.h"
-#include "../Private/TsuV8Wrapper.h"
+#include "TsuModule.h"
+#include "TsuTimer.h"
+#include "TsuV8Wrapper.h"
 
 #include "UObject/GCObject.h"
 #include "UObject/Stack.h"

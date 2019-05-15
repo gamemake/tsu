@@ -4,11 +4,10 @@
 
 class FCallback : public FTsuWebSocketServer::ICallback
 {
-	int OnHttp(FTsuWebSocketRequest& Request, FTsuWebSocketResponse& Response) override
+	void OnHttp(FTsuWebSocketRequest& Request, FTsuWebSocketResponse& Response) override
 	{
 		UE_LOG(LogTsuInspector, Log, TEXT("OnHttp %s %s"), *Request.GetMethod(), *Request.GetUri());
 		Response.End(200, CONTENT_TYPE_JSON_UTF8, Request.GetUri());
-		return 0;
 	}
 
 	void OnOpen(FTsuWebSocketConnection* Conn) override

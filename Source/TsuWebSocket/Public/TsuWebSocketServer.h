@@ -6,7 +6,7 @@ public:
 	class ICallback
 	{
 	public:
-		virtual int OnHttp(FTsuWebSocketRequest& Request, FTsuWebSocketResponse& Response) = 0;
+		virtual void OnHttp(FTsuWebSocketRequest& Request, FTsuWebSocketResponse& Response) = 0;
 		virtual void OnOpen(FTsuWebSocketConnection* Conn) = 0;
 		virtual void OnClosed(FTsuWebSocketConnection* Conn) = 0;
 		virtual void OnReceive(FTsuWebSocketConnection* Conn, const FString& Data) = 0;

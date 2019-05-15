@@ -129,16 +129,7 @@ int FTsuWebSocketServer::ProtocolCallback(lws* Wsi, enum lws_callback_reasons Re
 			if (Data->Request->ContentLength == 0)
 			{
 				Data->Response = new FTsuWebSocketResponse;
-				auto Ret = Callback->OnHttp(*Data->Request, *Data->Response);
-				if (Ret != 0)
-				{
-					// delete(Data->Request);
-					// delete(Data->Response);
-					Data->Request = nullptr;
-					Data->Response = nullptr;
-					return 1;
-				}
-
+				Callback->OnHttp(*Data->Request, *Data->Response);
 				lws_callback_on_writable(Wsi);
 			}
 			return 0;
@@ -158,16 +149,7 @@ int FTsuWebSocketServer::ProtocolCallback(lws* Wsi, enum lws_callback_reasons Re
 			check(Data->Request->ContentLength > 0);
 
 			Data->Response = new FTsuWebSocketResponse;
-			auto Ret = Callback->OnHttp(*Data->Request, *(Data->Response));
-			if (Ret != 0)
-			{
-				// delete Data->Request;
-				// delete Data->Response;
-				Data->Request = nullptr;
-				Data->Response = nullptr;
-				return 1;
-			}
-
+			Callback->OnHttp(*Data->Request, *(Data->Response));
 			lws_callback_on_writable(Wsi);
 			return 0;
 		}

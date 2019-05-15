@@ -8,6 +8,7 @@ public class TsuInspector : ModuleRules
             new string[]
             {
                 "TsuWebSocket",
+                "TsuRuntime",
                 "V8"
             }
         );
