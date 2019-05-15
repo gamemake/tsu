@@ -85,17 +85,13 @@ copy %OUT_DIR%v8_lib*dll.lib %LIB_DIR%
 copy %OUT_DIR%v8_lib*dll.pdb %LIB_DIR%
 copy %OUT_DIR%obj\v8_lib*.lib %LIB_DIR%
 copy %OUT_DIR%obj\v8_monolith.lib %LIB_DIR%
-for /R %LIB_DIR% %%I in ("*.*") do (
-    call %~dp0build-ren.bat %%I
-)
+REM for /R %LIB_DIR% %%I in ("*.*") do (
+REM     call %~dp0build-ren.bat %%I
+REM )
 
 if not exist %DLL_DIR% (
 	md %DLL_DIR%
-) else (
-    del /q %DLL_DIR%*.*
 )
-del /s /q %DLL_DIR%*.dll
-del /s /q %DLL_DIR%*.pdb
 copy %LIB_DIR%*.dll %DLL_DIR%
 copy %LIB_DIR%*.pdb %DLL_DIR%
 
