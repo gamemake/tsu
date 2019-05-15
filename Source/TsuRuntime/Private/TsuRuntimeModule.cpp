@@ -52,12 +52,15 @@ public:
 
 		HandleV8 = FPlatformProcess::GetDllHandle(
 			*FPaths::Combine(BinariesDir, TEXT("v8.dll")));
+		check(HandleV8);
 
 		HandleV8LibBase = FPlatformProcess::GetDllHandle(
 			*FPaths::Combine(BinariesDir, TEXT("v8_libbase.dll")));
+		check(HandleV8LibBase);
 
 		HandleV8LibPlatform = FPlatformProcess::GetDllHandle(
 			*FPaths::Combine(BinariesDir, TEXT("v8_libplatform.dll")));
+		check(HandleV8LibPlatform);
 
 		FPlatformProcess::PopDllDirectory(*BinariesDir);
 

@@ -1,5 +1,6 @@
 #include "TestInspectorCommandlet.h"
 
+#include "TsuInspectorClient.h"
 #include "TsuInspector.h"
 #include "TsuInspectorModule.h"
 #include "TsuInspectorLog.h"
@@ -46,6 +47,7 @@ int32 UTestInspectorCommandlet::Main(const FString& Params)
 	create_params.array_buffer_allocator =
 		v8::ArrayBuffer::Allocator::NewDefaultAllocator();
 	v8::Isolate* isolate = v8::Isolate::New(create_params);
+	FTsuInspectorClient Client;
 	run_shell = (argc == 1);
 	int result;
 	{
@@ -57,12 +59,14 @@ int32 UTestInspectorCommandlet::Main(const FString& Params)
 			fprintf(stderr, "Error creating context\n");
 			return 1;
 		}
-		auto Inspector = ITsuInspectorModule::Get().CreateInspector(context);
+		Client.Start(1980);
+		auto Inspector = new FTsuInspector(context, &Client);
 		v8::Context::Scope context_scope(context);
 		result = RunMain(isolate, platform.get(), argc, argv);
 		if (run_shell)
 			RunShell(context, platform.get());
-		ITsuInspectorModule::Get().DestroyInspector(Inspector);
+		delete Inspector;
+		Client.Stop();
 	}
 	isolate->Dispose();
 	v8::V8::Dispose();

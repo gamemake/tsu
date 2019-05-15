@@ -124,7 +124,7 @@ public class V8 : ModuleRules
 				PublicLibraryPaths.Add(LibraryDirectory);
 				foreach (var DLL in DLLs)
 				{
-					var LibName = string.Format("{0}{1}{2}", LibPrefix, DLL, LibSuffix);
+					var LibName = string.Format("{0}{1}.dll{2}", LibPrefix, DLL, LibSuffix);
 					PublicAdditionalLibraries.Add(LibName);
 					var DLLName = string.Format("{0}{1}{2}", DLLPrefix, DLL, DLLSuffix);
 					PublicDelayLoadDLLs.Add(DLLName);

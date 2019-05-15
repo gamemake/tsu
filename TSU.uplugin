@@ -33,7 +33,7 @@
 		{
 			"Name": "TsuInspector",
 			"Type": "Runtime",
-			"LoadingPhase": "PostConfigInit"
+			"LoadingPhase": "PreEarlyLoadingScreen"
 		},
 		{
 			"Name" : "TsuEditor",

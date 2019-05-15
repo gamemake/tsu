@@ -11,7 +11,6 @@ public class TsuRuntime : ModuleRules
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"InputCore",
 				"TsuUtilities",
 				"TsuWebSocketPP",
 				"TsuAsio"
@@ -23,8 +22,9 @@ public class TsuRuntime : ModuleRules
 				"Core",
 				"CoreUObject",
 				"Engine",
-				"V8"
-			});
+                "InputCore",
+                "V8"
+            });
 
 		if (Target.bBuildEditor)
 		{
