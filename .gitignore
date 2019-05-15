@@ -32,3 +32,10 @@ Thumbs.db
 *.ori
 *.orig
 *.tmp
+
+# V8
+/Source/ThirdParty/V8/Include
+/Source/ThirdParty/V8/Lib
+/Source/ThirdParty/*/.cipd/*
+/Source/ThirdParty/*/.gclient*
+/Source/ThirdParty/*/v8
