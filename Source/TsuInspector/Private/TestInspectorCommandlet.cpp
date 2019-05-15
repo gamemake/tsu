@@ -41,7 +41,7 @@ int32 UTestInspectorCommandlet::Main(const FString& Params)
 	std::unique_ptr<v8::Platform> platform = v8::platform::NewDefaultPlatform();
 	v8::V8::InitializePlatform(platform.get());
 	v8::V8::Initialize();
-	// v8::V8::SetFlagsFromCommandLine(&argc, argv, true);
+	v8::V8::SetFlagsFromCommandLine(&argc, argv, true);
 	v8::Isolate::CreateParams create_params;
 	create_params.array_buffer_allocator =
 		v8::ArrayBuffer::Allocator::NewDefaultAllocator();
@@ -344,7 +344,7 @@ bool ExecuteString(v8::Isolate* isolate, v8::Local<v8::String> source, v8::Local
 		v8::Local<v8::Value> result;
 		if (!script->Run(context).ToLocal(&result))
 		{
-			assert(try_catch.HasCaught());
+			check(try_catch.HasCaught());
 			// Print errors that happened during execution.
 			if (report_exceptions)
 				ReportException(isolate, &try_catch);
@@ -352,7 +352,7 @@ bool ExecuteString(v8::Isolate* isolate, v8::Local<v8::String> source, v8::Local
 		}
 		else
 		{
-			assert(!try_catch.HasCaught());
+			check(!try_catch.HasCaught());
 			if (print_result && !result->IsUndefined())
 			{
 				// If all went well and the result wasn't undefined then print

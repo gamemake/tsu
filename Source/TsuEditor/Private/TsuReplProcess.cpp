@@ -228,7 +228,6 @@ TOptional<FTsuReplProcess> FTsuReplProcess::Launch(
 		UE_LOG(LogTsuEditor, Error, TEXT("Failed to tie process to editor lifetime"));
 		return {};
 	}
-#else // PLATFORM_WINDOWS
 #endif // PLATFORM_WINDOWS
 
 	return FTsuReplProcess(
@@ -243,7 +242,8 @@ TOptional<FTsuReplProcess> FTsuReplProcess::Launch(
 
 bool FTsuReplProcess::Write(const FString& Input)
 {
-	return FPlatformProcess::WritePipe(StdInWrite, Input);
+	FTCHARToUTF8 Utf8(*Input);
+	return FPlatformProcess::WritePipe(StdInWrite, (const uint8*)Utf8.Get(), (const uint32)Utf8.Length());
 }
 
 TOptional<FString> FTsuReplProcess::ReadOutput(double Timeout)

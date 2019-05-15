@@ -37,10 +37,12 @@ public:
 #else // PLATFORM_64BITS
 			TEXT("Win32/")
 #endif // PLATFORM_64BITS
+/*
 #elif PLATFORM_MAC
 		TEXT("Mac/")
 #elif PLATFORM_MAC
 		TEXT("Linux/")
+*/
 #else
 	#error Not implemented
 #endif // PLATFORM_WINDOWS
@@ -70,6 +72,10 @@ public:
 		FPlatformProcess::FreeDllHandle(HandleV8LibPlatform);
 		FPlatformProcess::FreeDllHandle(HandleV8LibBase);
 		FPlatformProcess::FreeDllHandle(HandleV8);
+	}
+
+	void SetInspectorCallback(ITsuInspectorCallback* Callback) override
+	{
 	}
 
 private:

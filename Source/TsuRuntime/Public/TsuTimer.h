@@ -4,7 +4,7 @@
 
 #include "Engine/EngineTypes.h"
 
-class FTsuTimer
+class TSURUNTIME_API FTsuTimer
 {
 public:
 	FTsuTimer(TWeakObjectPtr<class UWorld> InWorld, FTimerHandle InHandle, class UTsuDelegateEvent* InEvent)

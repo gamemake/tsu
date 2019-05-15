@@ -4,7 +4,7 @@
 
 #include "UObject/Script.h"
 
-class FTsuModule
+class TSURUNTIME_API FTsuModule
 {
 public:
 	FTsuModule(const TCHAR* Binding);

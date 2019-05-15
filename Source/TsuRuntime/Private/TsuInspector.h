@@ -1,7 +1,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-
 #include "TsuV8Wrapper.h"
 
 class FTsuInspector

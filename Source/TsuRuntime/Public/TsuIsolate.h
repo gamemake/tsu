@@ -4,7 +4,7 @@
 
 #include "TsuV8Wrapper.h"
 
-class FTsuIsolate
+class TSURUNTIME_API FTsuIsolate
 {
 public:
 	static v8::Isolate* Get();

@@ -23,7 +23,7 @@ void FTsuInspectorChannel::dispatchMessage(const FString& data)
 #else
     static_assert(sizeof(TCHAR) == sizeof(uint16_t), "Character size mismatch");
     const auto MessagePtr = reinterpret_cast<const uint16_t*>(*data);
-    const auto MessageLen = (size_t)Data.Len();
+    const auto MessageLen = (size_t)data.Len();
 #endif
 
     InspectorSession->dispatchProtocolMessage({MessagePtr, MessageLen});

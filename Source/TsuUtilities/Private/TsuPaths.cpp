@@ -17,23 +17,36 @@ FString FTsuPaths::PluginDir()
 
 FString FTsuPaths::BinariesDir()
 {
+#if PLATFORM_WINDOWS
+#if PLATFORM_64BITS
 	return FPaths::Combine(
 		PluginDir(),
 		TEXT("Binaries"),
-#if PLATFORM_WINDOWS
-#if PLATFORM_64BITS
-			TEXT("Win64/")
+		TEXT("Win64")
+	);
 #else // PLATFORM_64BITS
-			TEXT("Win32/")
+	return FPaths::Combine(
+		PluginDir(),
+		TEXT("Binaries"),
+		TEXT("Win32")
+	);
 #endif // PLATFORM_64BITS
 #elif PLATFORM_MAC
-		TEXT("Mac/")
-#elif PLATFORM_MAC
-		TEXT("Linux/")
-#else
-	#error Not implemented
-#endif
+	return FPaths::Combine(
+		PluginDir(),
+		TEXT("Binaries"),
+		TEXT("Mac")
 	);
+#elif PLATFORM_LINUX
+	return FPaths::Combine(
+		PluginDir(),
+		TEXT("Binaries"),
+		TEXT("Linux")
+	);
+#else
+	check(!"Unsupport OS");
+	return TEXT("");
+#endif
 }
 
 FString FTsuPaths::ContentDir()
@@ -58,7 +71,11 @@ FString FTsuPaths::ScriptsSourceDir()
 
 FString FTsuPaths::ParserPath()
 {
+#if PLATFORM_WINDOWS
 	return FPaths::Combine(BinariesDir(), TEXT("TsuParser.exe"));
+#else
+	return FPaths::Combine(BinariesDir(), TEXT("TsuParser"));
+#endif
 }
 
 FString FTsuPaths::BootstrapPath()

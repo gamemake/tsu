@@ -1,30 +1,40 @@
 #include "TsuInspectorModule.h"
+#include "TsuRuntimeModule.h"
 #include "TsuInspector.h"
 
-class FTsuInspectorModule final : public ITsuInspectorModule
+class FTsuInspectorModule final
+	: public ITsuInspectorModule
+	, public ITsuInspectorCallback
 {
 public:
 	void StartupModule() override
 	{
-		Inspector.Start(1980);
+		InspectorClient.Start(1980);
 	}
 
 	void ShutdownModule() override
 	{
-		Inspector.Stop();
+		InspectorClient.Stop();
 	}
 
-	FTsuInspector* CreateInspector(v8::Local<v8::Context> Context) override
+	void* CreateInspector(v8::Local<v8::Context> Context) override
 	{
-		return new FTsuInspector(Context, &Inspector);
+		auto Inspector = new FTsuInspector(Context, &InspectorClient);
+		Inspectors.Add(Inspector, Inspector);
+		return Inspector;
 	}
 	
-	void DestroyInspector(FTsuInspector* Inpector) override
+	void DestroyInspector(void* Inpector) override
 	{
-
+		FTsuInspector* Value = nullptr;
+		if (Inspectors.RemoveAndCopyValue(Inpector, Value))
+		{
+			delete Value;
+		}
 	}
 
-	FTsuInspectorClient Inspector;
+	FTsuInspectorClient InspectorClient;
+	TMap<void*, FTsuInspector*> Inspectors;
 };
 
 IMPLEMENT_MODULE(FTsuInspectorModule, TsuInspector)

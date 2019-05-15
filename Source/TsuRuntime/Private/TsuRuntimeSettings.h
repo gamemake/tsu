@@ -1,7 +1,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-
 #include "TsuRuntimeSettings.generated.h"
 
 UCLASS(config=Game, defaultconfig, ClassGroup=TSU)
