@@ -2,7 +2,7 @@
 
 set -e
 
-V8_REVISION=5b4fd92c89e7bcb5902d3967033682e834f37b54
+V8_REVISION=c99a619ab56cbb75602f1c89ec461b9283c40917
 V8_URL=https://chromium.googlesource.com/v8/v8.git
 
 SYNC_REVISION="--revision $V8_REVISION"

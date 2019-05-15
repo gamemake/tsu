@@ -35,7 +35,16 @@ set INC_DIR=%ARTIFACT%Include\
 set LIB_DIR=%TARGET_OS%.%TARGET_CPU%\%TARGET_CONFIG%
 set LIB_DIR=%LIB_DIR:Win.x86=Win32%
 set LIB_DIR=%LIB_DIR:Win.x64=Win64%
-set LIB_DIR=%ARTIFACT%Lib\%LIB_DIR:Win.x64=Win64%\
+set LIB_DIR=%ARTIFACT%Lib\%LIB_DIR%\
+
+set DLL_DIR=%TARGET_OS%.%TARGET_CPU%
+set DLL_DIR=%DLL_DIR:Win.x86=Win32%
+set DLL_DIR=%DLL_DIR:Win.x64=Win64%
+set DLL_DIR=%ARTIFACT%..\..\..\Binaries\ThirdParty\V8\%DLL_DIR%\
+
+echo "INC_DIR=%INC_DIR%"
+echo "LIB_DIR=%LIB_DIR%"
+echo "DLL_DIR=%DLL_DIR%"
 
 pushd v8
 
@@ -67,7 +76,11 @@ if not exist %LIB_DIR% (
 ) else (
     del /q %LIB_DIR%*.*
 )
+del /s /q %LIB_DIR%*.dll
+del /s /q %LIB_DIR%*.pdb
+del /s /q %LIB_DIR%*.lib
 copy %OUT_DIR%v8.dll* %LIB_DIR%
+copy %OUT_DIR%v8_lib*.dll %LIB_DIR%
 copy %OUT_DIR%v8_lib*dll.lib %LIB_DIR%
 copy %OUT_DIR%v8_lib*dll.pdb %LIB_DIR%
 copy %OUT_DIR%obj\v8_lib*.lib %LIB_DIR%
@@ -75,5 +88,15 @@ copy %OUT_DIR%obj\v8_monolith.lib %LIB_DIR%
 for /R %LIB_DIR% %%I in ("*.*") do (
     call %~dp0build-ren.bat %%I
 )
+
+if not exist %DLL_DIR% (
+	md %DLL_DIR%
+) else (
+    del /q %DLL_DIR%*.*
+)
+del /s /q %DLL_DIR%*.dll
+del /s /q %DLL_DIR%*.pdb
+copy %LIB_DIR%*.dll %DLL_DIR%
+copy %LIB_DIR%*.pdb %DLL_DIR%
 
 popd

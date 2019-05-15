@@ -1,7 +1,7 @@
 
 call %~dp0build-env.bat
 
-set V8_REVISION=5b4fd92c89e7bcb5902d3967033682e834f37b54
+set V8_REVISION=c99a619ab56cbb75602f1c89ec461b9283c40917
 set V8_URL=https://chromium.googlesource.com/v8/v8.git
 set SYNC_REVISION=--revision %V8_REVISION%
 
