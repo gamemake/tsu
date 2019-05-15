@@ -12,11 +12,21 @@ FTsuInspectorChannel::FTsuInspectorChannel(
 
 void FTsuInspectorChannel::ReceiveMessage(const std::string& MessageUtf8)
 {
-	static_assert(sizeof(TCHAR) == sizeof(uint16_t), "Character size mismatch");
-
+#if PLATFORM_TCHAR_IS_CHAR16
 	const FString MessageUtf16 = UTF8_TO_TCHAR(MessageUtf8.c_str());
 	const auto MessagePtr = reinterpret_cast<const uint16_t*>(MessageUtf16.GetCharArray().GetData());
 	const auto MessageLen = (size_t)MessageUtf16.Len();
+#elif PLATFORM_TCHAR_IS_4_BYTES
+	// TODO : direct convert UTF8 to UTF16 is better
+	const FString MessageUtf32 = UTF8_TO_TCHAR(MessageUtf8.c_str());
+	auto MessageUtf16 = StringCast<char16_t>(static_cast<const TCHAR*>(*MessageUtf32));
+	const auto MessagePtr = reinterpret_cast<const uint16_t*>(MessageUtf16.Get());
+	const auto MessageLen = (size_t)MessageUtf16.Length();
+#else
+	const FString MessageUtf16 = UTF8_TO_TCHAR(MessageUtf8.c_str());
+	const auto MessagePtr = reinterpret_cast<const uint16_t*>(MessageUtf16.GetCharArray().GetData());
+	const auto MessageLen = (size_t)MessageUtf16.Len();
+#endif
 
 	Inspector->dispatchProtocolMessage({MessagePtr, MessageLen});
 }

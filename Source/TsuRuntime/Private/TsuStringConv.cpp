@@ -9,25 +9,18 @@ v8::Local<v8::String> FTsuStringConv::To(const FString& String)
 
 v8::Local<v8::String> FTsuStringConv::To(const TCHAR* String, int32 Length)
 {
-	static_assert(sizeof(TCHAR) == sizeof(uint16_t), "Character size mismatch");
-
-	return v8::String::NewFromTwoByte(
+	return v8::String::NewFromUtf8(
 		FTsuIsolate::Get(),
-		reinterpret_cast<const uint16_t*>(String),
-		v8::NewStringType::kNormal,
-		Length
+		TCHAR_TO_UTF8(String),
+		v8::NewStringType::kNormal
 	).ToLocalChecked();
 }
 
 FString FTsuStringConv::From(v8::Local<v8::String> String)
 {
-	static_assert(sizeof(uint16_t) == sizeof(TCHAR), "Character size mismatch");
-
 	v8::Isolate* Isolate = FTsuIsolate::Get();
-	v8::String::Value StringValue{Isolate, String};
-	auto Length = (int32)StringValue.length();
-	auto Ptr = reinterpret_cast<const TCHAR*>(*StringValue);
-	return FString(Length, Ptr);
+	v8::String::Utf8Value StringValue{Isolate, String};
+	return FString(UTF8_TO_TCHAR(*StringValue));
 }
 
 v8::Local<v8::String> operator""_v8(const char16_t* StringPtr, size_t StringLen)

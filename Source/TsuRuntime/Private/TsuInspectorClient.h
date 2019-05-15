@@ -25,12 +25,14 @@ public:
 	void UnregisterContext(v8::Local<v8::Context> Context);
 
 private:
+#if PLATFORM_WINDOWS
 	void OnSocketHttp(wspp::connection_hdl Handle);
 	void OnSocketOpen(wspp::connection_hdl Handle);
 	void OnSocketReceive(wspp::connection_hdl Handle, wspp_message_ptr Message);
 	void OnSocketSend(wspp::connection_hdl Handle, const std::string& Message);
 	void OnSocketClose(wspp::connection_hdl Handle);
 	void OnSocketFail(wspp::connection_hdl Handle);
+#endif
 
 	bool Tick(float DeltaTime = 0.f) override;
 
@@ -43,7 +45,9 @@ private:
 	v8::Platform* Platform = nullptr;
 	v8::Isolate* Isolate = nullptr;
 	std::unique_ptr<v8_inspector::V8Inspector> Inspector;
+#if PLATFORM_WINDOWS
 	wspp_server Server;
+#endif
 	TOptional<FTsuInspectorChannel> Channel;
 	bool bIsPaused = false;
 };

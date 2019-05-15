@@ -23,7 +23,7 @@ public class TsuRuntime : ModuleRules
 				"Core",
 				"CoreUObject",
 				"Engine",
-				"TsuV8"
+				"V8"
 			});
 
 		if (Target.bBuildEditor)
@@ -35,6 +35,7 @@ public class TsuRuntime : ModuleRules
 					"SlateCore",
 					"Slate",
 					"KismetCompiler",
+					"BlueprintGraph",
 					"Settings"
 				});
 		}

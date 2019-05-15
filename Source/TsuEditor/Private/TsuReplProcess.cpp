@@ -105,12 +105,23 @@ static bool CreateInputPipes(void*& ReadPipe, void*& WritePipe)
 
 static FProcHandle CreateProc(
 	const TCHAR* URL,
-	const TCHAR* Parms,
+	const TCHAR* Params,
 	void* StdOutWrite,
 	void* StdErrWrite,
 	void* StdInRead)
 {
-#error Not implemented
+	return FPlatformProcess::CreateProc(
+		URL,
+		Params,
+		false,
+		true,
+		false,
+		nullptr,
+		0,
+		nullptr,
+		StdOutWrite,
+		StdInRead
+	);
 }
 
 #endif // PLATFORM_WINDOWS
@@ -218,7 +229,6 @@ TOptional<FTsuReplProcess> FTsuReplProcess::Launch(
 		return {};
 	}
 #else // PLATFORM_WINDOWS
-#error Not implemented
 #endif // PLATFORM_WINDOWS
 
 	return FTsuReplProcess(

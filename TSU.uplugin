@@ -18,26 +18,27 @@
 		{
 			"Name": "TsuUtilities",
 			"Type": "Runtime",
-			"LoadingPhase": "PostConfigInit",
-			"WhitelistPlatforms": [
-				"Win64"
-			]
+			"LoadingPhase": "PostConfigInit"
+		},
+		{
+			"Name": "TsuWebSocket",
+			"Type": "Runtime",
+			"LoadingPhase": "PostConfigInit"
 		},
 		{
 			"Name": "TsuRuntime",
 			"Type": "Runtime",
-			"LoadingPhase": "PostConfigInit",
-			"WhitelistPlatforms": [
-				"Win64"
-			]
+			"LoadingPhase": "PostConfigInit"
+		},
+		{
+			"Name": "TsuInspector",
+			"Type": "Runtime",
+			"LoadingPhase": "PostConfigInit"
 		},
 		{
 			"Name" : "TsuEditor",
 			"Type" : "Editor",
-			"LoadingPhase" : "PreEarlyLoadingScreen",
-			"WhitelistPlatforms": [
-				"Win64"
-			]
+			"LoadingPhase" : "PreEarlyLoadingScreen"
 		}
 	]
 }

@@ -136,7 +136,20 @@ void GetEditorDetails(ETsuTextEditor Editor, FString& Path, FString& Args)
 #include "Windows/HideWindowsPlatformTypes.h"
 
 #else // PLATFORM_WINDOWS
-#error Not implemented
+
+namespace TsuEditorModule_Private
+{
+
+void GetEditorDetails(ETsuTextEditor Editor, FString& Path, FString& Args)
+{
+	Path.Empty();
+	Args.Empty();
+
+	FPaths::MakePlatformFilename(Path);
+}
+
+}
+
 #endif // PLATFORM_WINDOWS
 
 UTsuEditorUserSettings::UTsuEditorUserSettings(const FObjectInitializer& ObjectInitializer)

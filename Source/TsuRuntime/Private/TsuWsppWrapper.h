@@ -1,6 +1,8 @@
 #pragma once
 
 #if PLATFORM_WINDOWS
+
+#if PLATFORM_WINDOWS
 #include "Windows/AllowWindowsPlatformTypes.h"
 #include "Windows/AllowWindowsPlatformAtomics.h"
 #pragma warning(push)
@@ -23,3 +25,5 @@ namespace wspp = ::websocketpp;
 using wspp_server = wspp::server<wspp::config::asio>;
 using wspp_message_ptr = wspp_server::message_ptr;
 using wspp_connection_ptr = wspp_server::connection_ptr;
+
+#endif

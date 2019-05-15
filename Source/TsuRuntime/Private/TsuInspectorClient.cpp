@@ -3,19 +3,19 @@
 #include "TsuRuntimeLog.h"
 
 // #todo(#mihe): Should be the actual stringified port
-constexpr char* JsonList = R"([{
-  "description": "TSU instance",
-  "id": "2e0d32cf-212c-4f25-9ec8-4896e652513a",
-  "title": "TSU",
-  "type": "node",
-  "webSocketDebuggerUrl": "ws://127.0.0.1:19216/"
-}])";
+const char* JsonList = "([{\n"
+"  \"description\": \"TSU instance\",\n"
+"  \"id\": \"2e0d32cf-212c-4f25-9ec8-4896e652513a\",\n"
+"  \"title\": \"TSU\",\n"
+"  \"type\": \"node\",\n"
+"  \"webSocketDebuggerUrl\": \"ws://127.0.0.1:19216/\"\n"
+"}])";
 
 // #todo(#mihe): Should be the actual stringified version number
-constexpr char* JsonVersion = R"({
-  "Browser": "TSU/v0.1.0",
-  "Protocol-Version": "1.1"
-})";
+const char* JsonVersion = "({\n"
+"  \"Browser\": \"TSU/v0.1.0\",\n"
+"  \"Protocol-Version\": \"1.1\"\n"
+"})";
 
 DEFINE_LOG_CATEGORY_STATIC(LogWebSocketPP, Log, All);
 
@@ -26,6 +26,7 @@ FTsuInspectorClient::FTsuInspectorClient(v8::Platform* InPlatform, v8::Isolate* 
 {
 	Inspector = v8_inspector::V8Inspector::create(Isolate, this);
 
+#if PLATFORM_WINDOWS
 	try
 	{
 		// #todo(#mihe): Should set_ostream for both of these
@@ -65,6 +66,7 @@ FTsuInspectorClient::FTsuInspectorClient(v8::Platform* InPlatform, v8::Isolate* 
 	{
 		LogError(Exception.what());
 	}
+#endif
 }
 
 void FTsuInspectorClient::RegisterContext(v8::Local<v8::Context> Context)
@@ -79,6 +81,7 @@ void FTsuInspectorClient::UnregisterContext(v8::Local<v8::Context> Context)
 	Inspector->contextDestroyed(Context);
 }
 
+#if PLATFORM_WINDOWS
 void FTsuInspectorClient::OnSocketHttp(wspp::connection_hdl Handle)
 {
 	try
@@ -146,9 +149,11 @@ void FTsuInspectorClient::OnSocketFail(wspp::connection_hdl /*Handle*/)
 {
 	checkNoEntry();
 }
+#endif
 
 bool FTsuInspectorClient::Tick(float /*DeltaTime*/)
 {
+#if PLATFORM_WINDOWS
 	try
 	{
 		Server.poll();
@@ -157,6 +162,7 @@ bool FTsuInspectorClient::Tick(float /*DeltaTime*/)
 	{
 		LogError(Exception.what());
 	}
+#endif
 
 	return true;
 }
