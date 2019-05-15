@@ -3,8 +3,11 @@
   "bin": "output/index.js",
   "scripts": {
     "build": "tsc --build ./tsconfig.json",
+    "package-win32": "pkg --public --targets win --output ../../Binaries/Win32/TsuParser.exe .",
     "package-win64": "pkg --public --targets win --output ../../Binaries/Win64/TsuParser.exe .",
-    "package": "run-s build package-win64"
+    "package-mac": "pkg --public --targets mac --output ../../Binaries/Mac/TsuParser .",
+    "package-linux": "pkg --public --targets linux --output ../../Binaries/Linux/TsuParser .",
+    "package": "run-s build package-win64 package-mac package-linux"
   },
   "devDependencies": {
     "@types/node": "10.14.4",

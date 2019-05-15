@@ -4,10 +4,14 @@
 **/Binaries/*
 !/Binaries/Win64
 /Binaries/Win64/*
+!/Binaries/Win32/TsuParser.exe
 !/Binaries/Win64/TsuParser.exe
+!/Binaries/Mac/TsuParser
+!/Binaries/Linux/TsuParser
 !/Binaries/ThirdParty
 /Binaries/ThirdParty/**/*.pdb
-/Source/TsuBootstrap/output/*
+/Source/TsuBootstrap/output
+/Source/TsuParser/output
 
 # Windows
 Thumbs.db
@@ -36,7 +40,7 @@ Thumbs.db
 # V8
 /Source/ThirdParty/V8/Include
 /Source/ThirdParty/V8/Lib
-/Source/ThirdParty/**/v8/
-/Source/ThirdParty/**/.cipd/
-/Source/ThirdParty/**/.gclient
-/Source/ThirdParty/**/.gclient_entries
+/Source/ThirdParty/V8/scripts/*/v8/
+/Source/ThirdParty/V8/scripts/*/.cipd/
+/Source/ThirdParty/V8/scripts/*/.gclient
+/Source/ThirdParty/V8/scripts/*/.gclient_entries
