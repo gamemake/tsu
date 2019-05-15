@@ -4,7 +4,7 @@
 #include "TsuWebSocket.h"
 #include "TsuV8Wrapper.h"
 
-class TSUINSPECTOR_API FTsuInspectorChannel
+class FTsuInspectorChannel
 	: public v8_inspector::V8Inspector::Channel
 {
 public:

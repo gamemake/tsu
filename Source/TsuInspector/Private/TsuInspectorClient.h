@@ -7,14 +7,14 @@
 
 class FTsuInspectorChannel;
 
-class TSUINSPECTOR_API FTsuInspector
+class FTsuInspectorClient
 	: public v8_inspector::V8InspectorClient
     , public FTsuWebSocketServer::ICallback
 	, public FTickerObjectBase
 {
 public:
-    FTsuInspector();
-    virtual ~FTsuInspector();
+    FTsuInspectorClient();
+    virtual ~FTsuInspectorClient();
 
     void Start(int Port);
     void Stop();
@@ -34,6 +34,7 @@ public:
 	void quitMessageLoopOnPause() override;
 
 private:
+    int ServerPort;
 	std::unique_ptr<v8_inspector::V8Inspector> Inspector;
     FTsuWebSocketServer Server;
     TMap<FTsuWebSocketConnection*, FTsuInspectorChannel*> Channels;
