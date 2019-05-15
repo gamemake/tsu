@@ -36,6 +36,7 @@ Thumbs.db
 # V8
 /Source/ThirdParty/V8/Include
 /Source/ThirdParty/V8/Lib
+/Source/ThirdParty/**/v8/
 /Source/ThirdParty/**/.cipd/
 /Source/ThirdParty/**/.gclient
 /Source/ThirdParty/**/.gclient_entries
