@@ -11,6 +11,7 @@
 #include "TsuTypings.h"
 #include "TsuUtilities.h"
 #include "TsuWorldContextScope.h"
+#include "TsuInspectorCallback.h"
 
 #include "Engine/Engine.h"
 #include "HAL/PlatformFile.h"
@@ -70,11 +71,13 @@ FTsuContext::FTsuContext()
 	InitializeStructProxy();
 	InitializeKeys();
 
-	Inspector.Emplace(FTsuIsolate::GetPlatform(), Context);
+	Inspector = ITsuInspectorCallback::Get()->CreateInspector(Context);
 }
 
 FTsuContext::~FTsuContext()
 {
+	ITsuInspectorCallback::Get()->DestroyInspector(Inspector);
+
 	FCoreUObjectDelegates::GetPostGarbageCollect().RemoveAll(this);
 	FCoreUObjectDelegates::GetPreGarbageCollectDelegate().RemoveAll(this);
 

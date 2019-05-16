@@ -6,20 +6,20 @@
 
 // #todo(#mihe): Should be the actual stringified port
 const FString JsonList(
-	TEXT("([{\n")
+	TEXT("[{\n")
 	TEXT("  \"description\": \"TSU instance\",\n")
 	TEXT("  \"id\": \"2e0d32cf-212c-4f25-9ec8-4896e652513a\",\n")
 	TEXT("  \"title\": \"TSU\",\n")
 	TEXT("  \"type\": \"node\",\n")
 	TEXT("  \"webSocketDebuggerUrl\": \"ws://127.0.0.1:{PORT}/\"\n")
-	TEXT("}])"));
+	TEXT("}]"));
 
 // #todo(#mihe): Should be the actual stringified version number
 const FString JsonVersion(
-	TEXT("({\n")
+	TEXT("{\n")
 	TEXT("  \"Browser\": \"TSU/v0.1.0\",\n")
 	TEXT("  \"Protocol-Version\": \"1.1\"\n")
-	TEXT("})"));
+	TEXT("}"));
 
 FTsuInspectorClient::FTsuInspectorClient()
 {
@@ -64,6 +64,8 @@ void FTsuInspectorClient::UnregisterContext(v8::Local<v8::Context> Context)
 
 void FTsuInspectorClient::OnHttp(FTsuWebSocketRequest& Request, FTsuWebSocketResponse& Response)
 {
+	UE_LOG(LogTsuInspector, Log, TEXT("OnHttp %s %s"), *Request.GetMethod(), *Request.GetUri());
+
 	if (Request.GetUri() == TEXT("/json") || Request.GetUri() == TEXT("/json/list"))
 	{
 		auto PortStr = FString::Printf(TEXT("%d"), ServerPort);
@@ -82,11 +84,15 @@ void FTsuInspectorClient::OnHttp(FTsuWebSocketRequest& Request, FTsuWebSocketRes
 
 void FTsuInspectorClient::OnOpen(FTsuWebSocketConnection* Conn)
 {
+	UE_LOG(LogTsuInspector, Log, TEXT("OnOpen %p"), Conn);
+
 	Channels.Add(Conn, new FTsuInspectorChannel(Conn, *Inspector));
 }
 
 void FTsuInspectorClient::OnClosed(FTsuWebSocketConnection* Conn)
 {
+	UE_LOG(LogTsuInspector, Log, TEXT("OnClose %p"), Conn);
+
 	FTsuInspectorChannel* Channel = nullptr;
 	if (Channels.RemoveAndCopyValue(Conn, Channel))
 	{
@@ -96,6 +102,8 @@ void FTsuInspectorClient::OnClosed(FTsuWebSocketConnection* Conn)
 
 void FTsuInspectorClient::OnReceive(FTsuWebSocketConnection* Conn, const FString& Data)
 {
+	UE_LOG(LogTsuInspector, Log, TEXT("OnReceive %p %s"), Conn, *Data);
+
 	auto Channel = Channels.Find(Conn);
 	if (Channel)
 	{
@@ -105,6 +113,7 @@ void FTsuInspectorClient::OnReceive(FTsuWebSocketConnection* Conn, const FString
 
 void FTsuInspectorClient::OnWriteable(FTsuWebSocketConnection* Conn)
 {
+	UE_LOG(LogTsuInspector, Log, TEXT("OnWriteable %p"), Conn);
 }
 
 bool FTsuInspectorClient::Tick(float /*DeltaTime*/)

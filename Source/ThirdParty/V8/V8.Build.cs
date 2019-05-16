@@ -87,9 +87,10 @@ public class V8 : ModuleRules
 		if (IsDynamic)
 		{
 			PublicDefinitions.AddRange(new string[] {
-//				"USING_V8_SHARED",
-				"V8_DEPRECATION_WARNINGS",
-				"V8_IMMINENT_DEPRECATION_WARNINGS"
+				// "USING_V8_SHARED",
+				"TSU_DLL_DELAY_LOAD",
+                "V8_DEPRECATION_WARNINGS",
+                "V8_IMMINENT_DEPRECATION_WARNINGS"
 			});
 		}
 		else
@@ -129,7 +130,7 @@ public class V8 : ModuleRules
 					var DLLName = string.Format("{0}{1}{2}", DLLPrefix, DLL, DLLSuffix);
 					PublicDelayLoadDLLs.Add(DLLName);
 				}
-				PrivateDefinitions.Add("TSU_DLL_DELAY_LOAD");
+				// PrivateDefinitions.Add("TSU_DLL_DELAY_LOAD");
 			}
 			else 
 			{

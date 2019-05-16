@@ -43,7 +43,6 @@ public:
 };
 
 static FTsuV8Allocator TsuV8Allocator;
-static v8::Isolate::CreateParams TsuV8CreateParams;
 static v8::Local<v8::Context> TsuV8Context;
 
 void FTsuIsolate::Initialize()
@@ -53,6 +52,7 @@ void FTsuIsolate::Initialize()
 	Platform = v8::platform::NewDefaultPlatform();
 	v8::V8::InitializePlatform(Platform.get());
 	v8::V8::Initialize();
+	v8::Isolate::CreateParams TsuV8CreateParams;
 	TsuV8CreateParams.array_buffer_allocator = &TsuV8Allocator;
 	Isolate = v8::Isolate::New(TsuV8CreateParams);
 	Isolate->SetFatalErrorHandler(v8_error_handler);

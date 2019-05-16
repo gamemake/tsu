@@ -3,7 +3,6 @@
 #include "CoreMinimal.h"
 
 #include "TsuContextCallback.h"
-#include "../Private/TsuInspector.h"
 #include "TsuModule.h"
 #include "TsuTimer.h"
 #include "TsuV8Wrapper.h"
@@ -492,5 +491,5 @@ private:
 	TArray<FTsuTimer> AliveTimers;
 
 	/** ... */
-	TOptional<FTsuInspector> Inspector;
+	void *Inspector;
 };

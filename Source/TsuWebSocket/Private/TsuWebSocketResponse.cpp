@@ -1,6 +1,7 @@
 #include "TsuWebSocketPrivatePCH.h"
 
 #include "TsuWebSocketResponse.h"
+#include "TsuWebSocketLog.h"
 #include "LwsUtils.h"
 
 FTsuWebSocketResponse::FTsuWebSocketResponse()
@@ -60,8 +61,11 @@ int FTsuWebSocketResponse::Send(lws* Wsi)
 		}
 		Header += TEXT("\r\n");
 
+		UE_LOG(LogTsuWebSocket, Log, TEXT("Send HEADER %p %d %s"), this, Header.Len(), *Header);
+
 		return LwsWrite(Wsi, *Header, LWS_WRITE_HTTP_HEADERS);
 	}
 
+	UE_LOG(LogTsuWebSocket, Log, TEXT("Send BODY %p %d %s"), this, BodyText.Len(), *BodyText);
 	return LwsWrite(Wsi, *BodyText, LWS_WRITE_HTTP_FINAL);
 }

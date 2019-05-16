@@ -39,7 +39,7 @@ bool FTsuWebSocketServer::Start(int Port)
 		WebSocketProtocols[i].name = Protocols[i].Name;
 		WebSocketProtocols[i].user = Protocols[i].Callback;
 		WebSocketProtocols[i].rx_buffer_size = Protocols[i].BufferSize;
-		WebSocketProtocols[i].per_session_data_size = sizeof(FTsuWebSocketConnection*);
+		WebSocketProtocols[i].per_session_data_size = sizeof(SessionData);
 		WebSocketProtocols[i].callback = FTsuWebSocketServer::ProtocolCallback;
 	}
 
@@ -86,13 +86,13 @@ int FTsuWebSocketServer::ProtocolCallback(lws* Wsi, enum lws_callback_reasons Re
 
 	if (Data)
 	{
-		UE_LOG(LogTsuWebSocket, Log, TEXT("OnCallback: %p %d %p %p %d %p %p %p"), 
+		UE_LOG(LogTsuWebSocket, Log, TEXT("OnCallback: %p %2d %p %p %4d %p %p %p"), 
 			Wsi, (int)Reason, User, In, (int)Len,
 			Data->Request, Data->Response, Data->Conn);
 	}
 	else
 	{
-		UE_LOG(LogTsuWebSocket, Log, TEXT("OnCallback: %p %d %p %p %d"),
+		UE_LOG(LogTsuWebSocket, Log, TEXT("OnCallback: %p %2d %p %p %4d"),
 			Wsi, (int)Reason, User, In, (int)Len);
 	}
 
@@ -115,7 +115,8 @@ int FTsuWebSocketServer::ProtocolCallback(lws* Wsi, enum lws_callback_reasons Re
 			}
 			else
 			{
-				return 1;
+				UE_LOG(LogTsuWebSocket, Error, TEXT("Invalid Http Method"));
+				break;
 			}
 
 			Data->Request = new FTsuWebSocketRequest(Method, UTF8_TO_TCHAR((const char*)In));
@@ -123,14 +124,24 @@ int FTsuWebSocketServer::ProtocolCallback(lws* Wsi, enum lws_callback_reasons Re
 			{
 				// delete Data->Request;
 				Data->Request = nullptr;
-				return 1;
+				UE_LOG(LogTsuWebSocket, Error, TEXT("Failed to ParseHeader"));
+				break;
 			}
 
 			if (Data->Request->ContentLength == 0)
 			{
 				Data->Response = new FTsuWebSocketResponse;
+				UE_LOG(LogTsuWebSocket, Log, TEXT("BODY_COMPLETION %p %s"), Data->Request, *Data->Request->Method);
 				Callback->OnHttp(*Data->Request, *Data->Response);
-				lws_callback_on_writable(Wsi);
+				if (lws_callback_on_writable(Wsi) < 0)
+				{
+					UE_LOG(LogTsuWebSocket, Error, TEXT("Failed to lws_callback_on_writable 1"));
+					// delete Data->Request;
+					Data->Request = nullptr;
+					// delete Data->Response;
+					Data->Response = nullptr;
+					return 1;
+				}
 			}
 			return 0;
 		}
@@ -138,8 +149,9 @@ int FTsuWebSocketServer::ProtocolCallback(lws* Wsi, enum lws_callback_reasons Re
 	case LWS_CALLBACK_HTTP_BODY:
 		if (Data && Data->Request)
 		{
-			FUTF8ToTCHAR Utf8((const ANSICHAR*)In, Len);
-			Data->Request->Body += Utf8.Get();
+			FUTF8ToTCHAR Str((const ANSICHAR*)In, Len);
+			UE_LOG(LogTsuWebSocket, Log, TEXT("BODY %p %d %s"), Data->Request, Str.Length(), Str.Get());
+			Data->Request->Body += Str.Get();
 			return 0;
 		}
 		break;
@@ -149,15 +161,21 @@ int FTsuWebSocketServer::ProtocolCallback(lws* Wsi, enum lws_callback_reasons Re
 			check(Data->Request->ContentLength > 0);
 
 			Data->Response = new FTsuWebSocketResponse;
+			UE_LOG(LogTsuWebSocket, Log, TEXT("BODY_COMPLETION %p %s %s"), Data->Request, *Data->Request->Method, *Data->Request->Body);
 			Callback->OnHttp(*Data->Request, *(Data->Response));
-			lws_callback_on_writable(Wsi);
+			if (lws_callback_on_writable(Wsi) < 0)
+			{
+				UE_LOG(LogTsuWebSocket, Error, TEXT("Failed to lws_callback_on_writable 2"));
+				break;
+			}
 			return 0;
 		}
 		break;
 	case LWS_CALLBACK_HTTP_WRITEABLE:
 		if (Data && Data->Response)
 		{
-			return Data->Response->Send(Wsi);
+			auto Ret = Data->Response->Send(Wsi);
+			if (Ret >= 0) return 0;
 		}
 		break;
 	case LWS_CALLBACK_CLOSED_HTTP:
@@ -179,6 +197,7 @@ int FTsuWebSocketServer::ProtocolCallback(lws* Wsi, enum lws_callback_reasons Re
 		if (Data)
 		{
 			Data->Conn = new FTsuWebSocketConnection(Wsi);
+			UE_LOG(LogTsuWebSocket, Log, TEXT("OPEN %p"), Data->Conn);
 			Callback->OnOpen(Data->Conn);
 			lws_callback_on_writable(Wsi);
 			return 0;
@@ -197,6 +216,7 @@ int FTsuWebSocketServer::ProtocolCallback(lws* Wsi, enum lws_callback_reasons Re
 				// delete Data->Response;
 				Data->Response = nullptr;
 			}
+			UE_LOG(LogTsuWebSocket, Log, TEXT("CLOSE %p"), Data->Conn);
 			if (Data->Conn)
 			{
 				Callback->OnClosed(Data->Conn);
@@ -210,8 +230,10 @@ int FTsuWebSocketServer::ProtocolCallback(lws* Wsi, enum lws_callback_reasons Re
 		{
 			if (Data->Conn->SendQueue.Num() > 0)
 			{
-				FTCHARToUTF8 utf8(*Data->Conn->SendQueue[0]);
-				lws_write(Wsi, (unsigned char*)utf8.Get(), utf8.Length(), LWS_WRITE_TEXT);
+				auto Str = Data->Conn->SendQueue[0];
+				UE_LOG(LogTsuWebSocket, Log, TEXT("SEND %p %d %s"), Data->Conn, Str.Len(), *Str);
+				FTCHARToUTF8 Utf8(*Str);
+				lws_write(Wsi, (unsigned char*)Utf8.Get(), Utf8.Length(), LWS_WRITE_TEXT);
 				lws_callback_on_writable(Wsi);
 			}
 			else
@@ -225,7 +247,9 @@ int FTsuWebSocketServer::ProtocolCallback(lws* Wsi, enum lws_callback_reasons Re
 	case LWS_CALLBACK_RECEIVE:
 		if (Data && Data->Conn)
 		{
-			Callback->OnReceive(Data->Conn, UTF8_TO_TCHAR((const char*)In));
+			FUTF8ToTCHAR Str((const ANSICHAR*)In, Len);
+			UE_LOG(LogTsuWebSocket, Log, TEXT("RECEIVE %p %d %s"), Data->Conn, Str.Length(), Str.Get());
+			Callback->OnReceive(Data->Conn, Str.Get());
 			return 0;
 		}
 		break;
