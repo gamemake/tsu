@@ -1,6 +1,6 @@
 #!/bin/bash -x
 
-PWD=$(cd $(dirname $0); pwd)
+PWD=$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 source $PWD/build-fetch.sh
 

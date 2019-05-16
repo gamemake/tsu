@@ -29,8 +29,14 @@ if "%TARGET_CONFIG%" == "Debug" (
     set "GYP_DEFINES=fastbuild=1"
 )
 
-set OUT_DIR=out\%TARGET_OS%.%TARGET_CPU%.%TARGET_CONFIG%\
 set ARTIFACT=%~dp0..\..\
+set OUT_DIR=out\%TARGET_OS%.%TARGET_CPU%.%TARGET_CONFIG%\
+set GN_FILE=%~dp0..\gn_files\%TARGET_OS%.%TARGET_CPU%.%TARGET_CONFIG%.gn
+if not exist %GN_FILE% (
+    echo "GN_FILE NOT FOUND, %GN_FILE%"
+    exit 1
+)
+
 set INC_DIR=%ARTIFACT%Include\
 set LIB_DIR=%TARGET_OS%.%TARGET_CPU%\%TARGET_CONFIG%
 set LIB_DIR=%LIB_DIR:Win.x86=Win32%
@@ -51,7 +57,7 @@ pushd v8
 if not exist %OUT_DIR% (
 	md %OUT_DIR%
 )
-copy %~dp0..\gn_files\%TARGET_OS%.%TARGET_CPU%.%TARGET_CONFIG%.gn %OUT_DIR%args.gn
+copy %GN_FILE% %OUT_DIR%args.gn
 call gn gen %OUT_DIR%
 
 if "%REBUILD%" == "true" (
