@@ -3,6 +3,8 @@
 #include "TsuInspector.h"
 #include "TsuInspectorCallback.h"
 
+static TOptional<FTsuInspectorClient> InspectorClient;
+
 class FTsuInspectorModule final
 	: public ITsuInspectorModule
 	, public ITsuInspectorCallback
@@ -10,19 +12,20 @@ class FTsuInspectorModule final
 public:
 	void StartupModule() override
 	{
-		InspectorClient.Start(1980);
-		ITsuInspectorCallback::SetCallback(this);
+		InspectorClient.Emplace();
+		InspectorClient->Start(1980);
+		ITsuInspectorCallback::Set(this);
 	}
 
 	void ShutdownModule() override
 	{
-		ITsuInspectorCallback::SetCallback(nullptr);
-		InspectorClient.Stop();
+		ITsuInspectorCallback::Set(nullptr);
+		InspectorClient->Stop();
 	}
 
 	void* CreateInspector(v8::Local<v8::Context> Context) override
 	{
-		auto Inspector = new FTsuInspector(Context, &InspectorClient);
+		auto Inspector = new FTsuInspector(Context, &InspectorClient.GetValue());
 		Inspectors.Add(Inspector, Inspector);
 		return Inspector;
 	}
@@ -36,7 +39,6 @@ public:
 		}
 	}
 
-	FTsuInspectorClient InspectorClient;
 	TMap<void*, FTsuInspector*> Inspectors;
 };
 

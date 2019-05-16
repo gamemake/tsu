@@ -109,7 +109,9 @@ void FTsuInspectorClient::OnWriteable(FTsuWebSocketConnection* Conn)
 
 bool FTsuInspectorClient::Tick(float /*DeltaTime*/)
 {
+	FMemory::TestMemory();
 	Server.Run(0);
+	FMemory::TestMemory();
 	return true;
 }
 

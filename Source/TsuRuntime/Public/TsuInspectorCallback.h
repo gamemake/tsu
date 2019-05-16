@@ -5,8 +5,8 @@
 class TSURUNTIME_API ITsuInspectorCallback
 {
 public:
-	static void SetCallback(ITsuInspectorCallback* Callback);
-	static ITsuInspectorCallback* GetCallback();
+	static void Set(ITsuInspectorCallback* Callback);
+	static ITsuInspectorCallback* Get();
 
 	virtual ~ITsuInspectorCallback() {}
 	virtual void* CreateInspector(v8::Local<v8::Context> Context) = 0;
