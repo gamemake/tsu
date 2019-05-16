@@ -46,7 +46,6 @@ static FProcHandle CreateProc(
 	const TCHAR* URL,
 	const TCHAR* Parms,
 	void* StdOutWrite,
-	void* StdErrWrite,
 	void* StdInRead)
 {
 	SECURITY_ATTRIBUTES Security = {};
@@ -63,7 +62,7 @@ static FProcHandle CreateProc(
 	Startup.wShowWindow = SW_HIDE;
 	Startup.hStdInput = (::HANDLE)StdInRead;
 	Startup.hStdOutput = (::HANDLE)StdOutWrite;
-	Startup.hStdError = (::HANDLE)StdErrWrite;
+	Startup.hStdError = (::HANDLE)StdOutWrite;
 
 	FString CommandLine = FString::Printf(TEXT("\"%s\" %s"), URL, Parms);
 
@@ -107,7 +106,6 @@ static FProcHandle CreateProc(
 	const TCHAR* URL,
 	const TCHAR* Params,
 	void* StdOutWrite,
-	void* StdErrWrite,
 	void* StdInRead)
 {
 	return FPlatformProcess::CreateProc(
@@ -130,15 +128,11 @@ FTsuReplProcess::FTsuReplProcess(
 	FProcHandle InProcessHandle,
 	void* InStdOutRead,
 	void* InStdOutWrite,
-	void* InStdErrRead,
-	void* InStdErrWrite,
 	void* InStdInRead,
 	void* InStdInWrite)
 	: ProcessHandle(InProcessHandle)
 	, StdOutRead(InStdOutRead)
 	, StdOutWrite(InStdOutWrite)
-	, StdErrRead(InStdErrRead)
-	, StdErrWrite(InStdErrWrite)
 	, StdInRead(InStdInRead)
 	, StdInWrite(InStdInWrite)
 {
@@ -148,8 +142,6 @@ FTsuReplProcess::FTsuReplProcess(FTsuReplProcess&& Other)
 	: ProcessHandle(Other.ProcessHandle)
 	, StdOutRead(Other.StdOutRead)
 	, StdOutWrite(Other.StdOutWrite)
-	, StdErrRead(Other.StdErrRead)
-	, StdErrWrite(Other.StdErrWrite)
 	, StdInRead(Other.StdInRead)
 	, StdInWrite(Other.StdInWrite)
 {
@@ -161,7 +153,6 @@ FTsuReplProcess::~FTsuReplProcess()
 	if (ProcessHandle.IsValid())
 	{
 		FPlatformProcess::ClosePipe(StdOutRead, StdOutWrite);
-		FPlatformProcess::ClosePipe(StdErrRead, StdErrWrite);
 		FPlatformProcess::ClosePipe(StdInRead, StdInWrite);
 
 		FPlatformProcess::TerminateProc(ProcessHandle);
@@ -183,14 +174,6 @@ TOptional<FTsuReplProcess> FTsuReplProcess::Launch(
 		return {};
 	}
 
-	void* StdErrRead = nullptr;
-	void* StdErrWrite = nullptr;
-	if (!CreateOutputPipes(StdErrRead, StdErrWrite))
-	{
-		UE_LOG(LogTsuEditor, Error, TEXT("Failed to create error pipes"));
-		return {};
-	}
-
 	void* StdInRead = nullptr;
 	void* StdInWrite = nullptr;
 	if (!CreateInputPipes(StdInRead, StdInWrite))
@@ -203,7 +186,6 @@ TOptional<FTsuReplProcess> FTsuReplProcess::Launch(
 		*ProcessPath,
 		*ProcessArgs,
 		StdOutWrite,
-		StdErrWrite,
 		StdInRead);
 
 	if (!ProcessHandle.IsValid())
@@ -234,52 +216,68 @@ TOptional<FTsuReplProcess> FTsuReplProcess::Launch(
 		ProcessHandle,
 		StdOutRead,
 		StdOutWrite,
-		StdErrRead,
-		StdErrWrite,
 		StdInRead,
 		StdInWrite);
 }
 
 bool FTsuReplProcess::Write(const FString& Input)
 {
-	FTCHARToUTF8 Utf8(*Input);
+	auto Cmd = Input + TEXT("\n");
+	FTCHARToUTF8 Utf8(*Cmd);
 	return FPlatformProcess::WritePipe(StdInWrite, (const uint8*)Utf8.Get(), (const uint32)Utf8.Length());
 }
 
 TOptional<FString> FTsuReplProcess::ReadOutput(double Timeout)
 {
-	return ReadFromPipe(StdOutRead, Timeout);
+	ReadFromStdOut(Timeout);
+
+	if (StdOut.Num() <= 0)
+	{
+		return {};
+	}
+
+	auto retval = StdOut[0];
+	StdOut.RemoveAt(0);
+	return retval;
 }
 
-TOptional<FString> FTsuReplProcess::ReadError(double Timeout)
-{
-	return ReadFromPipe(StdErrRead, Timeout);
-}
+static FString TsuResponseTag(TEXT("RESPONSE_TAG "));
 
-TOptional<FString> FTsuReplProcess::ReadFromPipe(void* Pipe, double Timeout)
+void FTsuReplProcess::ReadFromStdOut(double Timeout)
 {
 	const double StartTime = FPlatformTime::Seconds();
 
-	FString Output;
-
-	do
+	while (StdOut.Num() <= 0)
 	{
+		OutText += FPlatformProcess::ReadPipe(StdOutRead);
+
+		for (;;)
+		{
+			auto idx = OutText.Find(TEXT("\n"));
+			if (idx < 0) break;
+
+			auto line = OutText.Mid(0, idx + 1);
+			line.TrimStartInline();
+			line.TrimEndInline();
+			OutText = OutText.Mid(idx + 1);
+
+			if (line.StartsWith(TsuResponseTag))
+			{
+				StdOut.Add(line.Mid(TsuResponseTag.Len()));
+			}
+			else if (line.Len() > 0)
+			{
+				UE_LOG(LogTsuEditor, Error, TEXT("%s"), *line);
+			}
+		}
+
+		if (!FPlatformProcess::IsProcRunning(ProcessHandle))
+			break;
+
 		const double ElapsedTime = FPlatformTime::Seconds() - StartTime;
 		if (ElapsedTime >= Timeout)
-			return {};
-
-		Output = FPlatformProcess::ReadPipe(Pipe);
-	} while (Output.IsEmpty());
-
-	FString Remainder;
-
-	do
-	{
-		Remainder = FPlatformProcess::ReadPipe(Pipe);
-		Output += Remainder;
-	} while (!Remainder.IsEmpty());
-
-	return Output;
+			break;
+	}
 }
 
 bool FTsuReplProcess::IsRunning() const

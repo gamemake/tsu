@@ -129,6 +129,7 @@ public class V8 : ModuleRules
 					var DLLName = string.Format("{0}{1}{2}", DLLPrefix, DLL, DLLSuffix);
 					PublicDelayLoadDLLs.Add(DLLName);
 				}
+				PrivateDefinitions.Add("TSU_DLL_DELAY_LOAD");
 			}
 			else 
 			{

@@ -2,6 +2,7 @@ import 'source-map-support/register';
 
 import * as path from 'path';
 import * as ts from 'typescript';
+import * as readline from 'readline';
 
 interface ParsedType {
 	name: string;
@@ -397,51 +398,67 @@ function findDependencies(
 
 function writeResponse(response: Response | string) {
 	if (typeof response !== 'string') {
-		response = JSON.stringify(response, null, '  ');
+		response = JSON.stringify(response);
 	}
 
-	process.stdout.write(response + '\n');
+	process.stdout.write('\nRESPONSE_TAG ' + response + '\n');
 
 	return response;
 }
 
-function processRequest(requestStr: string) {
+function processRequest(requestStr: string) : void {
 	const request = JSON.parse(requestStr) as Request;
 
 	// Cache responses for a short period since Unreal compiles the source file
 	// multiple times when compiling the Blueprint
 	const cachedResponse = responseCache.get(request.file);
-	if (cachedResponse) { return writeResponse(cachedResponse); }
-
-	const response = parseFile(request.file);
-	const responseStr = writeResponse(response);
-
-	responseCache.set(request.file, responseStr);
-	setTimeout(() => {
-		responseCache.delete(request.file);
-	}, 1000);
-
-	return responseStr;
-}
-
-let input = '';
-
-process.stdin.setEncoding('utf8');
-process.stdin.on('data', (chunk: string) => {
-	const lines = chunk.split(/\r?\n/);
-	if (lines.length <= 1) {
-		input += chunk;
+	if (cachedResponse) {
+		writeResponse(cachedResponse);
 		return;
 	}
 
-	const lastLine = lines.splice(-1, 1)[0];
-	const firstLine = lines.splice(0, 1)[0];
-
-	processRequest(input + firstLine);
-
-	for (const line of lines) {
-		processRequest(line);
+	var response : Response;
+	try {
+		response = parseFile(request.file);
+	} catch(err) {
+		process.stdout.write(err.message + '\n');
+		process.exit(-1);
+		return;
 	}
 
-	input = lastLine;
-});
+	const responseStr = writeResponse(response);
+	responseCache.set(request.file, responseStr);
+
+	/*
+	setTimeout(() => {
+		responseCache.delete(request.file);
+	}, 1000);
+	*/
+
+	// return responseStr;
+}
+
+process.stdin.setEncoding("utf8");
+var reader = readline.createInterface({
+	input: process.stdin,
+	output: process.stdout,
+	terminal: false
+})
+
+reader.on('line', function (line: string) {
+	var text = line.trim();
+
+	console.log("<", text, ">");
+
+	if (text == "EXIT") {
+		console.log("end parse");
+		process.exit(0);
+		return;
+	}
+
+	if (text.length > 0) {
+		processRequest(line);
+	}
+})
+
+console.log("start parse")

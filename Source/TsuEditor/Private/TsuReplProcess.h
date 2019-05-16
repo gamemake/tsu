@@ -26,7 +26,7 @@ public:
 
 	// #todo(#mihe): Move the default values to settings
 	TOptional<FString> ReadOutput(double Timeout = 5.f);
-	TOptional<FString> ReadError(double Timeout = 5.f);
+	void ReadFromStdOut(double Timeout = 5.f);
 
 	bool IsRunning() const;
 
@@ -35,18 +35,15 @@ private:
 		FProcHandle ProcessHandle,
 		void* StdOutRead,
 		void* StdOutWrite,
-		void* StdErrRead,
-		void* StdErrWrite,
 		void* StdInRead,
 		void* StdInWrite);
 
-	TOptional<FString> ReadFromPipe(void* Pipe, double Timeout);
 
 	mutable FProcHandle ProcessHandle;
 	void* StdOutRead = nullptr;
 	void* StdOutWrite = nullptr;
-	void* StdErrRead = nullptr;
-	void* StdErrWrite = nullptr;
 	void* StdInRead = nullptr;
 	void* StdInWrite = nullptr;
+	FString OutText;
+	TArray<FString> StdOut;
 };

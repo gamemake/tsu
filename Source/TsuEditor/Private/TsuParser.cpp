@@ -16,12 +16,7 @@ bool FTsuParser::Parse(const FString& FilePath, FTsuParsedFile& Response)
 	if (Process && !Process->IsRunning())
 	{
 		UE_LOG(LogTsuEditor, Error, TEXT("Parser found to have terminated unexpectedly"));
-
-		if (const TOptional<FString> Error = Process->ReadError())
-		{
-			UE_LOG(LogTsuEditor, Error, TEXT("\n%s"), *Error.GetValue());
-		}
-
+		Process->ReadFromStdOut();
 		Process.Reset();
 	}
 
@@ -64,10 +59,7 @@ bool FTsuParser::Parse(const FString& FilePath, FTsuParsedFile& Response)
 	{
 		UE_LOG(LogTsuEditor, Error, TEXT("Parser request timed out"));
 
-		if (TOptional<FString> Error = Process->ReadError())
-		{
-			UE_LOG(LogTsuEditor, Error, TEXT("\n%s"), *Error.GetValue());
-		}
+		Process->ReadFromStdOut();
 
 		UE_LOG(LogTsuEditor, Log, TEXT("Terminating parser..."));
 

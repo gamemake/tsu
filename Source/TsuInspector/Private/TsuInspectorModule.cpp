@@ -1,6 +1,7 @@
 #include "TsuInspectorModule.h"
 #include "TsuRuntimeModule.h"
 #include "TsuInspector.h"
+#include "TsuInspectorCallback.h"
 
 class FTsuInspectorModule final
 	: public ITsuInspectorModule
@@ -10,10 +11,12 @@ public:
 	void StartupModule() override
 	{
 		InspectorClient.Start(1980);
+		ITsuInspectorCallback::SetCallback(this);
 	}
 
 	void ShutdownModule() override
 	{
+		ITsuInspectorCallback::SetCallback(nullptr);
 		InspectorClient.Stop();
 	}
 

@@ -20,12 +20,34 @@
 #include "ISettingsModule.h"
 #endif // WITH_EDITOR
 
+#include "TsuRuntimeLog.h"
+#include "TsuV8Wrapper.h"
+
 class FTsuRuntimeModule final
 	: public ITsuRuntimeModule
 {
 public:
 	void StartupModule() override
 	{
+		UE_LOG(LogTsuRuntime, Log, TEXT("V8 Version %d.%d.%d.%d"),
+			V8_MAJOR_VERSION, V8_MINOR_VERSION, V8_BUILD_NUMBER, V8_PATCH_LEVEL);
+			
+		DelayLoadDLL();
+		FCoreDelegates::OnPostEngineInit.AddRaw(this, &FTsuRuntimeModule::OnPostEngineInit);
+	}
+
+	void ShutdownModule() override
+	{
+		RemoveCleanupDelegates();
+		UnregisterSettings();
+
+		FreeDLL();
+	}
+
+private:
+	void DelayLoadDLL()
+	{
+#ifdef TSU_DLL_DELAY_LOAD
 		const FString BinariesDir = FPaths::Combine(
 			FTsuPaths::PluginDir(),
 			TEXT("Binaries"),
@@ -63,25 +85,18 @@ public:
 		check(HandleV8LibPlatform);
 
 		FPlatformProcess::PopDllDirectory(*BinariesDir);
-
-		FCoreDelegates::OnPostEngineInit.AddRaw(this, &FTsuRuntimeModule::OnPostEngineInit);
+#endif
 	}
 
-	void ShutdownModule() override
+	void FreeDLL()
 	{
-		RemoveCleanupDelegates();
-		UnregisterSettings();
-
+#ifdef TSU_DLL_DELAY_LOAD
 		FPlatformProcess::FreeDllHandle(HandleV8LibPlatform);
 		FPlatformProcess::FreeDllHandle(HandleV8LibBase);
 		FPlatformProcess::FreeDllHandle(HandleV8);
+#endif
 	}
 
-	void SetInspectorCallback(ITsuInspectorCallback* Callback) override
-	{
-	}
-
-private:
 	void RegisterSettings()
 	{
 #if WITH_EDITOR
