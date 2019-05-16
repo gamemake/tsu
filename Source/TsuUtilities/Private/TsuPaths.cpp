@@ -49,6 +49,41 @@ FString FTsuPaths::BinariesDir()
 #endif
 }
 
+FString FTsuPaths::V8DllDir()
+{
+	return FPaths::Combine(
+		FTsuPaths::PluginDir(),
+		TEXT("Binaries"),
+		TEXT("ThirdParty"),
+		TEXT("V8"),
+#if PLATFORM_WINDOWS
+#if PLATFORM_64BITS
+			TEXT("Win64")
+#else // PLATFORM_64BITS
+			TEXT("Win32")
+#endif // PLATFORM_64BITS
+#elif PLATFORM_MAC
+		TEXT("Mac")
+#elif PLATFORM_MAC
+		TEXT("Linux")
+#else
+	#error Not implemented
+#endif // PLATFORM_WINDOWS
+	);
+}
+
+FString FTsuPaths::V8DllPath(const TCHAR* FileName)
+{
+	return FPaths::Combine(
+		V8DllDir(),
+#if PLATFORM_WINDOWS
+		FString::Printf(TEXT("%s.dll"), FileName)
+#elif PLATFORM_MAC
+		FString::Printf(TEXT("lib%s.dylib"), FileName)
+#endif // PLATFORM_WINDOWS
+	);
+}
+
 FString FTsuPaths::ContentDir()
 {
 	return FPaths::Combine(PluginDir(), TEXT("Content/"));

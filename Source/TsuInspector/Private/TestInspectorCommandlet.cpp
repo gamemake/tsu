@@ -4,6 +4,7 @@
 #include "TsuInspector.h"
 #include "TsuInspectorModule.h"
 #include "TsuInspectorLog.h"
+#include "TsuIsolate.h"
 
 UTestInspectorCommandlet::UTestInspectorCommandlet(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -19,16 +20,18 @@ static void Print(const v8::FunctionCallbackInfo<v8::Value>& args);
 static void Read(const v8::FunctionCallbackInfo<v8::Value>& args);
 static void Load(const v8::FunctionCallbackInfo<v8::Value>& args);
 static void Quit(const v8::FunctionCallbackInfo<v8::Value>& args);
+static void Tick(const v8::FunctionCallbackInfo<v8::Value>& args);
 static void Version(const v8::FunctionCallbackInfo<v8::Value>& args);
 static v8::MaybeLocal<v8::String> ReadFile(v8::Isolate* isolate, const char* name);
 static void ReportException(v8::Isolate* isolate, v8::TryCatch* handler);
 
 typedef char* STR;
+static FTsuInspectorClient* TestInpectorClient = nullptr;
 
 int32 UTestInspectorCommandlet::Main(const FString& Params)
 {
 	TArray<FString> ParamArray;
-	Params.ParseIntoArray(ParamArray, TEXT(" "), false);
+	Params.ParseIntoArray(ParamArray, TEXT(" "), true);
 	auto argc = ParamArray.Num() + 1;
 	auto argv = new STR[argc];
 	argv[0] = strdup("UE4Editor");
@@ -37,41 +40,31 @@ int32 UTestInspectorCommandlet::Main(const FString& Params)
 		argv[It] = strdup(TCHAR_TO_UTF8(*ParamArray[It - 1]));
 	}
 
-	v8::V8::InitializeICUDefaultLocation(argv[0]);
-	v8::V8::InitializeExternalStartupData(argv[0]);
-	std::unique_ptr<v8::Platform> platform = v8::platform::NewDefaultPlatform();
-	v8::V8::InitializePlatform(platform.get());
-	v8::V8::Initialize();
-	v8::V8::SetFlagsFromCommandLine(&argc, argv, true);
-	v8::Isolate::CreateParams create_params;
-	create_params.array_buffer_allocator =
-		v8::ArrayBuffer::Allocator::NewDefaultAllocator();
-	v8::Isolate* isolate = v8::Isolate::New(create_params);
-	FTsuInspectorClient Client;
 	run_shell = (argc == 1);
 	int result;
 	{
-		v8::Isolate::Scope isolate_scope(isolate);
-		v8::HandleScope handle_scope(isolate);
-		v8::Local<v8::Context> context = CreateShellContext(isolate);
+		v8::Isolate* Isolate = FTsuIsolate::Get();
+		fprintf(stderr, "Isolate %p\n", Isolate);
+		v8::Isolate::Scope isolate_scope(Isolate);
+		v8::HandleScope handle_scope(Isolate);
+		v8::Local<v8::Context> context = CreateShellContext(Isolate);
 		if (context.IsEmpty())
 		{
 			fprintf(stderr, "Error creating context\n");
 			return 1;
 		}
-		Client.Start(1980);
-		auto Inspector = new FTsuInspector(context, &Client);
+		TestInpectorClient = new FTsuInspectorClient();
+		TestInpectorClient->Start(19800);
+		auto Inspector = new FTsuInspector(context, TestInpectorClient);
 		v8::Context::Scope context_scope(context);
-		result = RunMain(isolate, platform.get(), argc, argv);
+		result = RunMain(FTsuIsolate::Get(), FTsuIsolate::GetPlatform(), argc, argv);
 		if (run_shell)
-			RunShell(context, platform.get());
+			RunShell(context, FTsuIsolate::GetPlatform());
 		delete Inspector;
-		Client.Stop();
+		TestInpectorClient->Stop();
+		delete TestInpectorClient;
 	}
-	isolate->Dispose();
-	v8::V8::Dispose();
-	v8::V8::ShutdownPlatform();
-	delete create_params.array_buffer_allocator;
+
 	return result;
 }
 
@@ -98,11 +91,10 @@ v8::Local<v8::Context> CreateShellContext(v8::Isolate* isolate)
 	global->Set(v8::String::NewFromUtf8(isolate, "load", v8::NewStringType::kNormal).ToLocalChecked(), v8::FunctionTemplate::New(isolate, Load));
 	// Bind the 'quit' function
 	global->Set(v8::String::NewFromUtf8(isolate, "quit", v8::NewStringType::kNormal).ToLocalChecked(), v8::FunctionTemplate::New(isolate, Quit));
+	// Bind the 'quit' function
+	global->Set(v8::String::NewFromUtf8(isolate, "tick", v8::NewStringType::kNormal).ToLocalChecked(), v8::FunctionTemplate::New(isolate, Tick));
 	// Bind the 'version' function
-	global->Set(
-		v8::String::NewFromUtf8(isolate, "version", v8::NewStringType::kNormal)
-			.ToLocalChecked(),
-		v8::FunctionTemplate::New(isolate, Version));
+	global->Set(v8::String::NewFromUtf8(isolate, "version", v8::NewStringType::kNormal).ToLocalChecked(), v8::FunctionTemplate::New(isolate, Version));
 
 	return v8::Context::New(isolate, NULL, global);
 }
@@ -205,6 +197,11 @@ void Quit(const v8::FunctionCallbackInfo<v8::Value>& args)
 	exit(exit_code);
 }
 
+void Tick(const v8::FunctionCallbackInfo<v8::Value>& args)
+{
+	TestInpectorClient->Tick();
+}
+
 void Version(const v8::FunctionCallbackInfo<v8::Value>& args)
 {
 	args.GetReturnValue().Set(
@@ -277,7 +274,7 @@ int RunMain(v8::Isolate* isolate, v8::Platform* platform, int argc, char* argv[]
 			if (!success)
 				return 1;
 		}
-		else
+		else if (*str != '-')
 		{
 			// Use all other arguments as names of files to load and run.
 			v8::Local<v8::String> file_name =
@@ -310,6 +307,8 @@ void RunShell(v8::Local<v8::Context> context, v8::Platform* platform)
 		v8::String::NewFromUtf8(context->GetIsolate(), "(shell)", v8::NewStringType::kNormal).ToLocalChecked());
 	while (true)
 	{
+		TestInpectorClient->Tick();
+		
 		char buffer[kBufferSize];
 		fprintf(stderr, "> ");
 		char* str = fgets(buffer, kBufferSize, stdin);

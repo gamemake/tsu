@@ -21,7 +21,7 @@
 #endif // WITH_EDITOR
 
 #include "TsuRuntimeLog.h"
-#include "TsuV8Wrapper.h"
+#include "TsuIsolate.h"
 
 class FTsuRuntimeModule final
 	: public ITsuRuntimeModule
@@ -31,8 +31,10 @@ public:
 	{
 		UE_LOG(LogTsuRuntime, Log, TEXT("V8 Version %d.%d.%d.%d"),
 			V8_MAJOR_VERSION, V8_MINOR_VERSION, V8_BUILD_NUMBER, V8_PATCH_LEVEL);
-			
 		DelayLoadDLL();
+
+		FTsuIsolate::Initialize();
+
 		FCoreDelegates::OnPostEngineInit.AddRaw(this, &FTsuRuntimeModule::OnPostEngineInit);
 	}
 
@@ -41,6 +43,8 @@ public:
 		RemoveCleanupDelegates();
 		UnregisterSettings();
 
+		FTsuIsolate::Uninitialize();
+
 		FreeDLL();
 	}
 
@@ -48,43 +52,16 @@ private:
 	void DelayLoadDLL()
 	{
 #ifdef TSU_DLL_DELAY_LOAD
-		const FString BinariesDir = FPaths::Combine(
-			FTsuPaths::PluginDir(),
-			TEXT("Binaries"),
-			TEXT("ThirdParty"),
-			TEXT("V8"),
-#if PLATFORM_WINDOWS
-#if PLATFORM_64BITS
-			TEXT("Win64/")
-#else // PLATFORM_64BITS
-			TEXT("Win32/")
-#endif // PLATFORM_64BITS
-/*
-#elif PLATFORM_MAC
-		TEXT("Mac/")
-#elif PLATFORM_MAC
-		TEXT("Linux/")
-*/
-#else
-	#error Not implemented
-#endif // PLATFORM_WINDOWS
-		);
+		auto V8DllDir = FTsuPaths::V8DllDir();
 
-		FPlatformProcess::PushDllDirectory(*BinariesDir);
-
-		HandleV8 = FPlatformProcess::GetDllHandle(
-			*FPaths::Combine(BinariesDir, TEXT("v8.dll")));
+		FPlatformProcess::PushDllDirectory(*V8DllDir);
+		HandleV8 = FPlatformProcess::GetDllHandle(*FPaths::V8DllPath(TEXT("v8")));
 		check(HandleV8);
-
-		HandleV8LibBase = FPlatformProcess::GetDllHandle(
-			*FPaths::Combine(BinariesDir, TEXT("v8_libbase.dll")));
-		check(HandleV8LibBase);
-
-		HandleV8LibPlatform = FPlatformProcess::GetDllHandle(
-			*FPaths::Combine(BinariesDir, TEXT("v8_libplatform.dll")));
-		check(HandleV8LibPlatform);
-
-		FPlatformProcess::PopDllDirectory(*BinariesDir);
+		HandleV8 = FPlatformProcess::GetDllHandle(*FPaths::V8DllPath(TEXT("v8_libbase")));
+		check(HandleV8);
+		HandleV8 = FPlatformProcess::GetDllHandle(*FPaths::V8DllPath(TEXT("v8_libplatform")));
+		check(HandleV8);
+		FPlatformProcess::PopDllDirectory(*V8DllDir);
 #endif
 	}
 

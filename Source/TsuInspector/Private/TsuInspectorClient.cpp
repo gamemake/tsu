@@ -7,19 +7,19 @@
 // #todo(#mihe): Should be the actual stringified port
 const FString JsonList(
 	TEXT("([{\n")
-		TEXT("  \"description\": \"TSU instance\",\n")
-			TEXT("  \"id\": \"2e0d32cf-212c-4f25-9ec8-4896e652513a\",\n")
-				TEXT("  \"title\": \"TSU\",\n")
-					TEXT("  \"type\": \"node\",\n")
-						TEXT("  \"webSocketDebuggerUrl\": \"ws://127.0.0.1:{PORT}/\"\n")
-							TEXT("}])"));
+	TEXT("  \"description\": \"TSU instance\",\n")
+	TEXT("  \"id\": \"2e0d32cf-212c-4f25-9ec8-4896e652513a\",\n")
+	TEXT("  \"title\": \"TSU\",\n")
+	TEXT("  \"type\": \"node\",\n")
+	TEXT("  \"webSocketDebuggerUrl\": \"ws://127.0.0.1:{PORT}/\"\n")
+	TEXT("}])"));
 
 // #todo(#mihe): Should be the actual stringified version number
 const FString JsonVersion(
 	TEXT("({\n")
-		TEXT("  \"Browser\": \"TSU/v0.1.0\",\n")
-			TEXT("  \"Protocol-Version\": \"1.1\"\n")
-				TEXT("})"));
+	TEXT("  \"Browser\": \"TSU/v0.1.0\",\n")
+	TEXT("  \"Protocol-Version\": \"1.1\"\n")
+	TEXT("})"));
 
 FTsuInspectorClient::FTsuInspectorClient()
 {
@@ -68,11 +68,11 @@ void FTsuInspectorClient::OnHttp(FTsuWebSocketRequest& Request, FTsuWebSocketRes
 	{
 		auto PortStr = FString::Printf(TEXT("%d"), ServerPort);
 		auto ResStr = JsonList.Replace(TEXT("{PORT}"), *PortStr);
-		Response.End(404, CONTENT_TYPE_JSON_UTF8, *ResStr);
+		Response.End(200, CONTENT_TYPE_JSON_UTF8, *ResStr);
 	}
 	else if (Request.GetUri() == TEXT("/json/version"))
 	{
-		Response.End(404, CONTENT_TYPE_JSON_UTF8, JsonVersion);
+		Response.End(200, CONTENT_TYPE_JSON_UTF8, JsonVersion);
 	}
 	else
 	{

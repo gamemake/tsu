@@ -4,6 +4,8 @@ public class TsuInspector : ModuleRules
 {
 	public TsuInspector( ReadOnlyTargetRules Target ) : base(Target)
 	{
+        PrivatePCHHeaderFile = "Private/TsuInspectorPrivatePCH.h";
+
         PublicDependencyModuleNames.AddRange(
             new string[]
             {
