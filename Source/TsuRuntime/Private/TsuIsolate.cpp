@@ -48,20 +48,14 @@ static v8::Local<v8::Context> TsuV8Context;
 
 void FTsuIsolate::Initialize()
 {
-	// v8::V8::InitializeICUDefaultLocation(argv[0]);
-	// v8::V8::InitializeExternalStartupData(argv[0]);
+	v8::V8::InitializeICUDefaultLocation("TSU");
+	v8::V8::InitializeExternalStartupData("TSU");
 	Platform = v8::platform::NewDefaultPlatform();
 	v8::V8::InitializePlatform(Platform.get());
 	v8::V8::Initialize();
 	TsuV8CreateParams.array_buffer_allocator = &TsuV8Allocator;
 	Isolate = v8::Isolate::New(TsuV8CreateParams);
 	Isolate->SetFatalErrorHandler(v8_error_handler);
-
-	v8::Isolate::Scope isolate_scope(Isolate);
-	v8::HandleScope handle_scope(Isolate);
-	v8::Local<v8::ObjectTemplate> global = v8::ObjectTemplate::New(Isolate);
-	v8::Local<v8::Context> context = v8::Context::New(Isolate, NULL, global);
-	UE_LOG(LogTsuRuntime, Log, TEXT("enddddd"));
 }
 
 void FTsuIsolate::Uninitialize()

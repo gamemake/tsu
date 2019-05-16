@@ -57,10 +57,10 @@ private:
 		FPlatformProcess::PushDllDirectory(*V8DllDir);
 		HandleV8 = FPlatformProcess::GetDllHandle(*FPaths::V8DllPath(TEXT("v8")));
 		check(HandleV8);
-		HandleV8 = FPlatformProcess::GetDllHandle(*FPaths::V8DllPath(TEXT("v8_libbase")));
-		check(HandleV8);
-		HandleV8 = FPlatformProcess::GetDllHandle(*FPaths::V8DllPath(TEXT("v8_libplatform")));
-		check(HandleV8);
+		HandleV8LibBase = FPlatformProcess::GetDllHandle(*FPaths::V8DllPath(TEXT("v8_libbase")));
+		check(HandleV8LibBase);
+		HandleV8LibPlatform = FPlatformProcess::GetDllHandle(*FPaths::V8DllPath(TEXT("v8_libplatform")));
+		check(HandleV8LibPlatform);
 		FPlatformProcess::PopDllDirectory(*V8DllDir);
 #endif
 	}
