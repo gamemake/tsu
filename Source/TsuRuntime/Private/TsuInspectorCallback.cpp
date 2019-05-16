@@ -2,12 +2,12 @@
 
 static ITsuInspectorCallback* InspectorCallback = nullptr;
 
-void ITsuInspectorCallback::SetCallback(ITsuInspectorCallback* Callback)
+void ITsuInspectorCallback::Set(ITsuInspectorCallback* Callback)
 {
     InspectorCallback = Callback;
 }
 
-ITsuInspectorCallback* ITsuInspectorCallback::GetCallback()
+ITsuInspectorCallback* ITsuInspectorCallback::Get()
 {
     return InspectorCallback;
 }
