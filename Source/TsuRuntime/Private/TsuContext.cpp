@@ -289,12 +289,21 @@ void FTsuContext::InitializeBuiltins()
 	DefineMethod(File, u"exists"_v8, &FTsuContext::_OnFileExists);
 	DefineProperty(Global, u"__file"_v8, File);
 
+	v8::Local<v8::Object> Process = v8::Object::New(Isolate);
+	DefineProperty(Process, u"pid"_v8, v8::Number::New(Isolate, (double)FPlatformProcess::GetCurrentProcessId()));
+	DefineProperty(Global, u"process"_v8, Process);
+
+
 #if PLATFORM_WINDOWS
 	DefineProperty(Global, u"__platform"_v8, u"win32"_v8);
 #elif PLATFORM_MAC
 	DefineProperty(Global, u"__platform"_v8, u"darwin"_v8);
 #elif PLATFORM_LINUX
 	DefineProperty(Global, u"__platform"_v8, u"linux"_v8);
+#elif PLATFORM_IOS
+	DefineProperty(Global, u"__platform"_v8, u"ios"_v8);
+#elif PLATFORM_ANDROID
+	DefineProperty(Global, u"__platform"_v8, u"android"_v8);
 #else
 #error Not implemented
 #endif

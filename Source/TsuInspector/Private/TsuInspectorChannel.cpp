@@ -35,15 +35,25 @@ void FTsuInspectorChannel::sendMessage(v8_inspector::StringBuffer& MessageBuffer
 {
     v8_inspector::StringView MessageView = MessageBuffer.string();
 
+	FString Message;
 	if (MessageView.is8Bit())
     {
-        Conn->SendMessage(UTF8_TO_TCHAR((const char*)MessageView.characters8()));
-    }
+		Message = UTF8_TO_TCHAR((const char*)MessageView.characters8());
+	}
 	else
     {
-        auto Converter = StringCast<TCHAR>((const char16_t*)MessageView.characters16());
-        Conn->SendMessage(FString(Converter.Length(), Converter.Get()));
+#if PLATFORM_TCHAR_IS_4_BYTES
+		static_assert(sizeof(TCHAR) == sizeof(uint32_t), "Character size mismatch");
+		auto Converter = StringCast<TCHAR>(static_cast<const char16_t*>(MessageView.characters16()));
+		Message = FString(Converter.Length(), Converter.Get());
+#else
+		static_assert(sizeof(TCHAR) == sizeof(uint16_t), "Character size mismatch");
+		Message = FString((const TCHAR*)MessageView.characters16());
+#endif
     }
+
+	UE_LOG(LogTsuInspector, Log, TEXT("Send %p %p %s"), Conn, this, *Message);
+	Conn->SendMessage(Message);
 }
 
 void FTsuInspectorChannel::sendResponse(int callId, std::unique_ptr<v8_inspector::StringBuffer> message)

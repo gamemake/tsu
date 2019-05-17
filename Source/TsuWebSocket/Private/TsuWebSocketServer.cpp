@@ -85,12 +85,14 @@ int FTsuWebSocketServer::ProtocolCallback(lws* Wsi, enum lws_callback_reasons Re
 	auto Callback = protocol ? (ICallback*)protocol->user : nullptr;
 	auto Data = (SessionData*)User;
 
+	/*
     UE_LOG(LogTsuWebSocket, Log, TEXT("OnCallback: %p %2d %p %p %4d %p %p %p"),
            Wsi, (int)Reason, User, In, (int)Len,
            Data?Data->Request:nullptr,
            Data?Data->Response:nullptr,
            Data?Data->Conn:nullptr
            );
+	*/
 
 	switch (Reason)
 	{
@@ -227,6 +229,7 @@ int FTsuWebSocketServer::ProtocolCallback(lws* Wsi, enum lws_callback_reasons Re
 			if (Data->Conn->SendQueue.Num() > 0)
 			{
 				auto Str = Data->Conn->SendQueue[0];
+				Data->Conn->SendQueue.RemoveAt(0);
 				UE_LOG(LogTsuWebSocket, Log, TEXT("SEND %p %d %s"), Data->Conn, Str.Len(), *Str);
 				FTCHARToUTF8 Utf8(*Str);
 				lws_write(Wsi, (unsigned char*)Utf8.Get(), Utf8.Length(), LWS_WRITE_TEXT);

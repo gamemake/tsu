@@ -2,7 +2,6 @@
 // Modified work - Copyright 2019 Mikael Hermansson. All Rights Reserved.
 
 #include "TsuReplProcess.h"
-
 #include "TsuEditorLog.h"
 
 #include "HAL/PlatformTime.h"
@@ -260,6 +259,8 @@ void FTsuReplProcess::ReadFromStdOut(double Timeout)
 			line.TrimStartInline();
 			line.TrimEndInline();
 			OutText = OutText.Mid(idx + 1);
+
+			UE_LOG(LogTsuEditor, Log, TEXT("LINE %s"), *line);
 
 			if (line.StartsWith(TsuResponseTag))
 			{
