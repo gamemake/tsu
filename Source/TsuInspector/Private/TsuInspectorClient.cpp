@@ -84,36 +84,47 @@ void FTsuInspectorClient::OnHttp(FTsuWebSocketRequest& Request, FTsuWebSocketRes
 
 void FTsuInspectorClient::OnOpen(FTsuWebSocketConnection* Conn)
 {
-	UE_LOG(LogTsuInspector, Log, TEXT("OnOpen %p"), Conn);
-
-	Channels.Add(Conn, new FTsuInspectorChannel(Conn, *Inspector));
+	auto Channel = new FTsuInspectorChannel(Conn, *Inspector);
+	UE_LOG(LogTsuInspector, Log, TEXT("CreateChannel %p %p"), Conn, Channel);
+	Channels.Add(Conn, Channel);
 }
 
 void FTsuInspectorClient::OnClosed(FTsuWebSocketConnection* Conn)
 {
-	UE_LOG(LogTsuInspector, Log, TEXT("OnClose %p"), Conn);
-
 	FTsuInspectorChannel* Channel = nullptr;
 	if (Channels.RemoveAndCopyValue(Conn, Channel))
 	{
 		delete Channel;
 	}
+
+	UE_LOG(LogTsuInspector, Log, TEXT("DestroyChannel %p %p"), Conn, Channel);
 }
 
 void FTsuInspectorClient::OnReceive(FTsuWebSocketConnection* Conn, const FString& Data)
 {
-	UE_LOG(LogTsuInspector, Log, TEXT("OnReceive %p %s"), Conn, *Data);
-
 	auto Channel = Channels.Find(Conn);
 	if (Channel)
 	{
+		UE_LOG(LogTsuInspector, Log, TEXT("OnReceive %p %p %s"), Conn, *Channel, *Data);
 		(*Channel)->dispatchMessage(Data);
+	}
+	else
+	{
+		UE_LOG(LogTsuInspector, Log, TEXT("OnReceive %p %p %s"), Conn, nullptr, *Data);
 	}
 }
 
 void FTsuInspectorClient::OnWriteable(FTsuWebSocketConnection* Conn)
 {
-	UE_LOG(LogTsuInspector, Log, TEXT("OnWriteable %p"), Conn);
+	auto Channel = Channels.Find(Conn);
+	if (Channel)
+	{
+		UE_LOG(LogTsuInspector, Log, TEXT("OnWriteable %p %p"), Conn, *Channel);
+	}
+	else
+	{
+		UE_LOG(LogTsuInspector, Log, TEXT("OnWriteable %p %p"), Conn, nullptr);
+	}
 }
 
 bool FTsuInspectorClient::Tick(float /*DeltaTime*/)

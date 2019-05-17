@@ -9,6 +9,7 @@ public:
 	static ITsuInspectorCallback* Get();
 
 	virtual ~ITsuInspectorCallback() {}
+
 	virtual void* CreateInspector(v8::Local<v8::Context> Context) = 0;
 	virtual void DestroyInspector(void* Inspector) = 0;
 };

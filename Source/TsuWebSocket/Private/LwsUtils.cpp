@@ -111,3 +111,10 @@ int LwsWrite(lws* Wsi, const TCHAR* Data, lws_write_protocol H)
 		lws_callback_on_writable(Wsi);
 	return ret;
 }
+
+const FString LwsToString(const void* Data, size_t Len)
+{
+	FUTF8ToTCHAR Convert((const char*)Data, Len);
+	FString Str(Convert.Length(), Convert.Get());
+	return Str;
+}

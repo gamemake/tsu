@@ -12,6 +12,7 @@ public:
     virtual ~FTsuInspectorChannel();
 
     void dispatchMessage(const FString& data);
+    void sendMessage(v8_inspector::StringBuffer& MessageBuffer);
     void sendResponse(int callId, std::unique_ptr<v8_inspector::StringBuffer> message) override;
     void sendNotification(std::unique_ptr<v8_inspector::StringBuffer> message) override;
     void flushProtocolNotifications() override;

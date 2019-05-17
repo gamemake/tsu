@@ -15,6 +15,8 @@ FTsuInspectorChannel::~FTsuInspectorChannel()
 
 void FTsuInspectorChannel::dispatchMessage(const FString& data)
 {
+    UE_LOG(LogTsuInspector, Log, TEXT("dispatchMessage %p %s"), this, *data);
+
 #if PLATFORM_TCHAR_IS_4_BYTES
     static_assert(sizeof(TCHAR) == sizeof(uint32_t), "Character size mismatch");
     auto MessageUtf16 = StringCast<char16_t>(static_cast<const TCHAR*>(*data));
@@ -29,17 +31,31 @@ void FTsuInspectorChannel::dispatchMessage(const FString& data)
     InspectorSession->dispatchProtocolMessage({MessagePtr, MessageLen});
 }
 
+void FTsuInspectorChannel::sendMessage(v8_inspector::StringBuffer& MessageBuffer)
+{
+    v8_inspector::StringView MessageView = MessageBuffer.string();
+
+	if (MessageView.is8Bit())
+    {
+        Conn->SendMessage(UTF8_TO_TCHAR((const char*)MessageView.characters8()));
+    }
+	else
+    {
+        auto Converter = StringCast<TCHAR>((const char16_t*)MessageView.characters16());
+        Conn->SendMessage(FString(Converter.Length(), Converter.Get()));
+    }
+}
+
 void FTsuInspectorChannel::sendResponse(int callId, std::unique_ptr<v8_inspector::StringBuffer> message)
 {
-
+    sendMessage(*message);
 }
 
 void FTsuInspectorChannel::sendNotification(std::unique_ptr<v8_inspector::StringBuffer> message)
 {
-
+    sendMessage(*message);
 }
 
 void FTsuInspectorChannel::flushProtocolNotifications()
 {
-
 }
