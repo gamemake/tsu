@@ -429,11 +429,9 @@ function processRequest(requestStr: string) : void {
 	const responseStr = writeResponse(response);
 	responseCache.set(request.file, responseStr);
 
-	/*
 	setTimeout(() => {
 		responseCache.delete(request.file);
 	}, 1000);
-	*/
 
 	// return responseStr;
 }
