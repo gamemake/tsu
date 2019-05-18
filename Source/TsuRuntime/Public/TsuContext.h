@@ -437,9 +437,6 @@ private:
 	static TOptional<FTsuContext> Singleton;
 
 	/** ... */
-	static v8::Isolate* Isolate;
-
-	/** ... */
 	v8::Global<v8::Context> GlobalContext;
 
 	/** ... */

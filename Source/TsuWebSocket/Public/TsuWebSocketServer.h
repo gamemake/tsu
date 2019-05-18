@@ -16,6 +16,8 @@ public:
 	FTsuWebSocketServer();
 	~FTsuWebSocketServer();
 
+	void SetVerbose(bool Enable);
+
 	void AddProtocol(const char* Name, size_t BufferSize, ICallback* Callback);
 
 	bool Start(int Port);
@@ -32,7 +34,9 @@ private:
 		ICallback* Callback;
 	};
 
+	bool Verbose;
 	TArray<ProtocolData> Protocols;
 	lws_protocols* WebSocketProtocols;
 	lws_context* WebSocketContext;
+	TMap<lws*, FTsuWebSocketConnection*> Connections;
 };

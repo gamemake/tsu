@@ -4,6 +4,7 @@
 #include "TsuContext.h"
 #include "TsuPaths.h"
 #include "TsuRuntimeBlueprintCompiler.h"
+#include "TsuInspectorCallback.h"
 
 #if WITH_EDITOR
 #include "TsuRuntimeSettings.h"
@@ -33,9 +34,9 @@ public:
 			V8_MAJOR_VERSION, V8_MINOR_VERSION, V8_BUILD_NUMBER, V8_PATCH_LEVEL);
 		DelayLoadDLL();
 
-		FTsuIsolate::Initialize();
 
 		FCoreDelegates::OnPostEngineInit.AddRaw(this, &FTsuRuntimeModule::OnPostEngineInit);
+		FCoreDelegates::OnExit.AddRaw(this, &FTsuRuntimeModule::OnExit);
 	}
 
 	void ShutdownModule() override
@@ -43,12 +44,23 @@ public:
 		RemoveCleanupDelegates();
 		UnregisterSettings();
 
-		FTsuIsolate::Uninitialize();
-
 		FreeDLL();
 	}
 
 private:
+	void InitializeV8()
+	{
+		FTsuIsolate::Initialize();
+		ITsuInspectorCallback::Get()->InitializeInspectorServer(1980);
+	}
+
+	void UninitializeV8()
+	{
+		FTsuContext::Destroy();
+		ITsuInspectorCallback::Get()->UninitializeInspectorServer();
+		FTsuIsolate::Uninitialize();
+	}
+
 	void DelayLoadDLL()
 	{
 #ifdef TSU_DLL_DELAY_LOAD
@@ -114,8 +126,16 @@ private:
 		}
 
 		RegisterSettings();
+		InitializeV8();
 		FTsuContext::Get();
 		AddCleanupDelegates();
+	}
+
+	void OnExit()
+	{
+		FCoreDelegates::OnExit.RemoveAll(this);
+
+		UninitializeV8();
 	}
 
 	static TSharedPtr<FKismetCompilerContext> MakeCompiler(

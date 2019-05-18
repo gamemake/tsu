@@ -266,10 +266,6 @@ void FTsuReplProcess::ReadFromStdOut(double Timeout)
 			{
 				StdOut.Add(line.Mid(TsuResponseTag.Len()));
 			}
-			else if (line.Len() > 0)
-			{
-				UE_LOG(LogTsuEditor, Error, TEXT("%s"), *line);
-			}
 		}
 
 		if (!FPlatformProcess::IsProcRunning(ProcessHandle))
