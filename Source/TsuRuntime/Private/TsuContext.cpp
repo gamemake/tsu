@@ -288,6 +288,8 @@ void FTsuContext::InitializeBuiltins()
 
 	v8::Local<v8::Object> Process = v8::Object::New(FTsuIsolate::Get());
 	DefineProperty(Process, u"pid"_v8, v8::Number::New(FTsuIsolate::Get(), (double)FPlatformProcess::GetCurrentProcessId()));
+	DefineProperty(Process, u"version"_v8, u"1.0.1"_v8);
+	DefineProperty(Process, u"arch"_v8, u"win64"_v8);
 	DefineProperty(Global, u"process"_v8, Process);
 
 

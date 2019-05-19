@@ -34,7 +34,6 @@ public:
 			V8_MAJOR_VERSION, V8_MINOR_VERSION, V8_BUILD_NUMBER, V8_PATCH_LEVEL);
 		DelayLoadDLL();
 
-
 		FCoreDelegates::OnPostEngineInit.AddRaw(this, &FTsuRuntimeModule::OnPostEngineInit);
 		FCoreDelegates::OnExit.AddRaw(this, &FTsuRuntimeModule::OnExit);
 	}
@@ -50,8 +49,10 @@ public:
 private:
 	void InitializeV8()
 	{
+		auto Settings = GetDefault<UTsuRuntimeSettings>();
+
 		FTsuIsolate::Initialize();
-		ITsuInspectorCallback::Get()->InitializeInspectorServer(1980);
+		ITsuInspectorCallback::Get()->InitializeInspectorServer(Settings->Port);
 	}
 
 	void UninitializeV8()

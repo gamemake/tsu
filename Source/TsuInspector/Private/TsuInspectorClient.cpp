@@ -37,10 +37,14 @@ void FTsuInspectorClient::Start(int Port)
 	Server.AddProtocol("protocol", 5 * 1024, this);
 	ServerPort = Port;
 	Server.Start(Port);
+
+	UE_LOG(LogTsuInspector, Log, TEXT("Start inspcector on PORT %d"), Port);
 }
 
 void FTsuInspectorClient::Stop()
 {
+	UE_LOG(LogTsuInspector, Log, TEXT("Stop inspcector"));
+
 	Server.Stop();
 
 	for (auto It = Channels.CreateIterator(); It; ++It)
@@ -64,7 +68,7 @@ void FTsuInspectorClient::UnregisterContext(v8::Local<v8::Context> Context)
 
 void FTsuInspectorClient::OnHttp(FTsuWebSocketRequest& Request, FTsuWebSocketResponse& Response)
 {
-	UE_LOG(LogTsuInspector, Log, TEXT("OnHttp %s %s"), *Request.GetMethod(), *Request.GetUri());
+	// UE_LOG(LogTsuInspector, Log, TEXT("OnHttp %s %s"), *Request.GetMethod(), *Request.GetUri());
 
 	if (Request.GetUri() == TEXT("/json") || Request.GetUri() == TEXT("/json/list"))
 	{
@@ -85,7 +89,7 @@ void FTsuInspectorClient::OnHttp(FTsuWebSocketRequest& Request, FTsuWebSocketRes
 void FTsuInspectorClient::OnOpen(FTsuWebSocketConnection* Conn)
 {
 	auto Channel = new FTsuInspectorChannel(Conn, *Inspector);
-	UE_LOG(LogTsuInspector, Log, TEXT("CreateChannel %p %p"), Conn, Channel);
+	// UE_LOG(LogTsuInspector, Log, TEXT("CreateChannel %p %p"), Conn, Channel);
 	Channels.Add(Conn, Channel);
 }
 
@@ -97,7 +101,7 @@ void FTsuInspectorClient::OnClosed(FTsuWebSocketConnection* Conn)
 		delete Channel;
 	}
 
-	UE_LOG(LogTsuInspector, Log, TEXT("DestroyChannel %p %p"), Conn, Channel);
+	// UE_LOG(LogTsuInspector, Log, TEXT("DestroyChannel %p %p"), Conn, Channel);
 }
 
 void FTsuInspectorClient::OnReceive(FTsuWebSocketConnection* Conn, const FString& Data)
@@ -105,12 +109,12 @@ void FTsuInspectorClient::OnReceive(FTsuWebSocketConnection* Conn, const FString
 	auto Channel = Channels.Find(Conn);
 	if (Channel)
 	{
-		UE_LOG(LogTsuInspector, Log, TEXT("OnReceive %p %p %s"), Conn, *Channel, *Data);
+		// UE_LOG(LogTsuInspector, Log, TEXT("OnReceive %p %p %s"), Conn, *Channel, *Data);
 		(*Channel)->dispatchMessage(Data);
 	}
 	else
 	{
-		UE_LOG(LogTsuInspector, Log, TEXT("OnReceive %p %p %s"), Conn, nullptr, *Data);
+		// UE_LOG(LogTsuInspector, Log, TEXT("OnReceive %p %p %s"), Conn, nullptr, *Data);
 	}
 }
 
@@ -119,11 +123,11 @@ void FTsuInspectorClient::OnWriteable(FTsuWebSocketConnection* Conn)
 	auto Channel = Channels.Find(Conn);
 	if (Channel)
 	{
-		UE_LOG(LogTsuInspector, Log, TEXT("OnWriteable %p %p"), Conn, *Channel);
+		// UE_LOG(LogTsuInspector, Log, TEXT("OnWriteable %p %p"), Conn, *Channel);
 	}
 	else
 	{
-		UE_LOG(LogTsuInspector, Log, TEXT("OnWriteable %p %p"), Conn, nullptr);
+		// UE_LOG(LogTsuInspector, Log, TEXT("OnWriteable %p %p"), Conn, nullptr);
 	}
 }
 
