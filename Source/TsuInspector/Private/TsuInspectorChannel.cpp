@@ -44,7 +44,7 @@ void FTsuInspectorChannel::sendMessage(v8_inspector::StringBuffer& MessageBuffer
     {
 #if PLATFORM_TCHAR_IS_4_BYTES
 		static_assert(sizeof(TCHAR) == sizeof(uint32_t), "Character size mismatch");
-		auto Converter = StringCast<TCHAR>(static_cast<const char16_t*>(MessageView.characters16()));
+		auto Converter = StringCast<TCHAR>((const char16_t*)MessageView.characters16());
 		Message = FString(Converter.Length(), Converter.Get());
 #else
 		static_assert(sizeof(TCHAR) == sizeof(uint16_t), "Character size mismatch");

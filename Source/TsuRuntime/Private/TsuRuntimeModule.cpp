@@ -53,11 +53,12 @@ private:
 
 		FTsuIsolate::Initialize();
 		ITsuInspectorCallback::Get()->InitializeInspectorServer(Settings->Port);
+		FTsuContext::Initialize();
 	}
 
 	void UninitializeV8()
 	{
-		FTsuContext::Destroy();
+		FTsuContext::Uninitialize();
 		ITsuInspectorCallback::Get()->UninitializeInspectorServer();
 		FTsuIsolate::Uninitialize();
 	}

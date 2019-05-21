@@ -38,12 +38,13 @@ const FName FTsuContext::MetaWorldContext = TEXT("WorldContext");
 const FName FTsuContext::NameEventExecute = GET_FUNCTION_NAME_CHECKED(UTsuDelegateEvent, Execute);
 
 TOptional<FTsuContext> FTsuContext::Singleton;
+/*
 v8::Global<v8::FunctionTemplate> FTsuContext::GlobalDelegateTemplate;
 v8::Global<v8::FunctionTemplate> FTsuContext::GlobalMulticastDelegateTemplate;
 v8::Global<v8::Function> FTsuContext::GlobalArrayHandlerConstructor;
 v8::Global<v8::Function> FTsuContext::GlobalArrayConstructor;
 v8::Global<v8::Function> FTsuContext::GlobalStructHandlerConstructor;
-
+*/
 #define ensureV8(InExpression) FTsuContext::EnsureV8(ensure(InExpression), TEXT(#InExpression))
 
 FTsuContext::FTsuContext()
@@ -107,6 +108,23 @@ FTsuContext& FTsuContext::Get()
 		Singleton.Emplace();
 
 	return Singleton.GetValue();
+}
+
+void FTsuContext::Initialize()
+{
+}
+
+void FTsuContext::Uninitialize()
+{
+	if (Singleton.IsSet())
+	{
+		Get().GlobalDelegateTemplate.Reset();
+		Get().GlobalMulticastDelegateTemplate.Reset();
+		Get().GlobalArrayHandlerConstructor.Reset();
+		Get().GlobalArrayConstructor.Reset();
+		Get().GlobalStructHandlerConstructor.Reset();
+		Destroy();
+	}
 }
 
 void FTsuContext::Destroy()

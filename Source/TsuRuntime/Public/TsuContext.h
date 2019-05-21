@@ -35,6 +35,12 @@ public:
 	/** Gets the singleton, creating it if needed */
 	static FTsuContext& Get();
 
+	/** Initialize the singleton */
+	static void Initialize();
+
+	/** Uninitialize the singleton */
+	static void Uninitialize();
+
 	/** Destroys the singleton */
 	static void Destroy();
 
@@ -440,19 +446,19 @@ private:
 	v8::Global<v8::Context> GlobalContext;
 
 	/** ... */
-	static v8::Global<v8::FunctionTemplate> GlobalDelegateTemplate;
+	v8::Global<v8::FunctionTemplate> GlobalDelegateTemplate;
 
 	/** ... */
-	static v8::Global<v8::FunctionTemplate> GlobalMulticastDelegateTemplate;
+	v8::Global<v8::FunctionTemplate> GlobalMulticastDelegateTemplate;
 
 	/** ... */
-	static v8::Global<v8::Function> GlobalArrayHandlerConstructor;
+	v8::Global<v8::Function> GlobalArrayHandlerConstructor;
 
 	/** ... */
-	static v8::Global<v8::Function> GlobalArrayConstructor;
+	v8::Global<v8::Function> GlobalArrayConstructor;
 
 	/** ... */
-	static v8::Global<v8::Function> GlobalStructHandlerConstructor;
+	v8::Global<v8::Function> GlobalStructHandlerConstructor;
 
 	/** ... */
 	v8::Global<v8::Object> GlobalKeys;
