@@ -4,10 +4,10 @@
 #include "UObject/ObjectMacros.h"
 #include "Commandlets/Commandlet.h"
 
-#include "TsuCodeGeneratorCommandlet.generated.h"
+#include "TsuCodeGenerateCommandlet.generated.h"
 
 UCLASS()
-class UTsuCodeGeneratorCommandlet : public UCommandlet
+class UTsuCodeGenerateCommandlet : public UCommandlet
 {
 	GENERATED_UCLASS_BODY()
 
