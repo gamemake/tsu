@@ -37,6 +37,5 @@ private:
 
 	template <typename FmtType, typename... Types>
     void WriteLine(const FmtType& Fmt, Types... Args);
-    int TabStop = 0;
     TArray<FString> Lines;
 };

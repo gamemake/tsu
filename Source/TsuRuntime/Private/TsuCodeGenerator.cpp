@@ -218,11 +218,22 @@ void FTsuCodeGenerator::Export(UClass *Class, UFunction *Function)
 
     if (ReturnProperty)
     {
-        WriteLine(TEXT("    public %s(%s): %s;"), *Function->GetName(), *Args, *PropertyType(ReturnProperty));
+        WriteLine(
+            TEXT("    public %s%s(%s): %s;"),
+            Function->FunctionFlags&FUNC_Static?TEXT(" static"):TEXT(""),
+            *Function->GetName(),
+            *Args,
+            *PropertyType(ReturnProperty)
+        );
     }
     else
     {
-        WriteLine(TEXT("    public %s(%s): void;"), *Function->GetName(), *Args);
+        WriteLine(
+            TEXT("    public %s%s(%s): void;"),
+            Function->FunctionFlags&FUNC_Static?TEXT(" static"):TEXT(""),
+            *Function->GetName(),
+            *Args
+        );
     }
 }
 
@@ -430,12 +441,5 @@ template <typename FmtType, typename... Types>
 void FTsuCodeGenerator::WriteLine(const FmtType& Fmt, Types... Args)
 {
     auto Line = FString::Printf(Fmt, Args...);
-    if (!Line.IsEmpty())
-    {
-        for (auto It=0; It<TabStop; ++It)
-        {
-            Line = TEXT("    ") + Line;
-        }
-    }
     Lines.Add(Line);
 }
