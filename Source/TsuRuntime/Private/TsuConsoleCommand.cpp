@@ -3,6 +3,7 @@
 #include "TsuRuntimeLog.h"
 #include "TsuIsolate.h"
 #include "TsuContext.h"
+#include "TsuCodeGenerator.h"
 
 static const char* ToCString(const v8::String::Utf8Value& value);
 static bool ExecuteString(v8::Isolate* isolate, v8::Local<v8::String> source, v8::Local<v8::Value> name, bool print_result, bool report_exceptions);
@@ -33,10 +34,21 @@ static void JSRun(const TArray< FString >& Args)
 	}
 }
 
+static void TsuCodeGenerator(const TArray<FString>& Args)
+{
+	FTsuCodeGenerator::ExportAll();
+}
+
 static FAutoConsoleCommand CVarJSRun(
 	TEXT("JSRun"),
 	TEXT("Execute javascript string"),
 	FConsoleCommandWithArgsDelegate::CreateStatic(JSRun),
+	ECVF_Cheat);
+
+static FAutoConsoleCommand CVarTsuCodeGenerate(
+	TEXT("TsuCodeGenerate"),
+	TEXT("Generat code"),
+	FConsoleCommandWithArgsDelegate::CreateStatic(TsuCodeGenerator),
 	ECVF_Cheat);
 
 // Extracts a C string from a V8 Utf8Value.
