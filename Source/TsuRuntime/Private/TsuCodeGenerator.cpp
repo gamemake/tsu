@@ -1,6 +1,7 @@
 #include "TsuCodeGenerator.h"
 #include "UObject/UObjectHash.h"
 #include "UObject/UObjectIterator.h"
+#include "UObject/EnumProperty.h"
 #include "UObject/UnrealType.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
@@ -54,24 +55,24 @@ bool FTsuCodeGenerator::CanExport(UClass *Class)
     return true;
 }
 
-bool FTsuCodeGenerator::CanExport(UClass *Class, UFunction *Func)
+bool FTsuCodeGenerator::CanExport(UFunction *Function)
 {
-	if (Func->FunctionFlags & FUNC_Delegate)
+	if (Function->FunctionFlags & FUNC_Delegate)
 		return false;
 
-	if (Func->FunctionFlags & FUNC_UbergraphFunction)
+	if (Function->FunctionFlags & FUNC_UbergraphFunction)
 		return false;
 
-	if (IsFieldDeprecated(Func))
+	if (IsFieldDeprecated(Function))
 		return false;
 
-	if (Func->HasMetaData(TEXT("BlueprintGetter")) || Func->HasMetaData("BlueprintSetter"))
+	if (Function->HasMetaData(TEXT("BlueprintGetter")) || Function->HasMetaData("BlueprintSetter"))
 		return false;
 
-	if (Func->GetName().StartsWith(TEXT("OnRep_")))
+	if (Function->GetName().StartsWith(TEXT("OnRep_")))
 		return false;
 
-    for(TFieldIterator<UProperty> PropIt(Func); PropIt; ++PropIt )
+    for(TFieldIterator<UProperty> PropIt(Function); PropIt; ++PropIt )
     {
         if (!CanExport(*PropIt))
         {
@@ -81,38 +82,42 @@ bool FTsuCodeGenerator::CanExport(UClass *Class, UFunction *Func)
     return true;
 }
 
-bool FTsuCodeGenerator::CanExport(UProperty *Prop)
+bool FTsuCodeGenerator::CanExport(UProperty *Property)
 {
-	if (IsFieldDeprecated(Prop))
+	if (IsFieldDeprecated(Property))
 		return false;
 
-    auto Type = PropertyType(Prop);
+    auto Type = PropertyType(Property);
     return !Type.IsEmpty();
 }
 
-void FTsuCodeGenerator::Prepare(UProperty *Prop)
+void FTsuCodeGenerator::Prepare(UProperty *Property)
 {
-    if (auto EnumProperty = Cast<UEnumProperty>(Prop))
+    if (auto EnumProperty = Cast<UEnumProperty>(Property))
 	{
         Export(EnumProperty->GetEnum());
 	}
-	else if (auto ObjectProperty = Cast<UObjectPropertyBase>(Prop))
+	else if (auto ObjectProperty = Cast<UObjectPropertyBase>(Property))
 	{
         Export(ObjectProperty->PropertyClass);
 	}
-	else if (auto StructProperty = Cast<UStructProperty>(Prop))
+	else if (auto InterfaceProperty = Cast<UInterfaceProperty>(Property))
+	{
+        // Export(InterfaceProperty->);
+	}
+	else if (auto StructProperty = Cast<UStructProperty>(Property))
 	{
         Export(StructProperty->Struct);
 	}
-	else if (auto ArrayProperty = Cast<UArrayProperty>(Prop))
+	else if (auto ArrayProperty = Cast<UArrayProperty>(Property))
 	{
         Prepare(ArrayProperty->Inner);
 	}
-	else if (auto SetProperty = Cast<USetProperty>(Prop))
+	else if (auto SetProperty = Cast<USetProperty>(Property))
 	{
         Prepare(SetProperty->ElementProp);
 	}
-	else if (auto MapProperty = Cast<UMapProperty>(Prop))
+	else if (auto MapProperty = Cast<UMapProperty>(Property))
 	{
         Prepare(MapProperty->KeyProp);
         Prepare(MapProperty->ValueProp);
@@ -150,7 +155,7 @@ void FTsuCodeGenerator::Export(UClass *Class)
 
     for (TFieldIterator<UFunction> FuncIt(Class); FuncIt; ++FuncIt)
     {
-        if (CanExport(Class, *FuncIt))
+        if (CanExport(*FuncIt))
         {
             for(TFieldIterator<UProperty> PropIt(*FuncIt); PropIt; ++PropIt )
             {
@@ -161,7 +166,7 @@ void FTsuCodeGenerator::Export(UClass *Class)
 
     if (Super)
     {
-        WriteLine(TEXT("declare class %s : %s {"), *ClassName(Class), *ClassName(Super));
+        WriteLine(TEXT("declare class %s extends %s {"), *ClassName(Class), *ClassName(Super));
     }
     else
     {
@@ -177,7 +182,7 @@ void FTsuCodeGenerator::Export(UClass *Class)
 
     for (TFieldIterator<UFunction> FuncIt(Class); FuncIt; ++FuncIt)
     {
-        if (CanExport(Class, *FuncIt))
+        if (CanExport(*FuncIt))
         {
             Export(Class, *FuncIt);
         }
@@ -186,11 +191,11 @@ void FTsuCodeGenerator::Export(UClass *Class)
     WriteLine(TEXT("}"));
 }
 
-void FTsuCodeGenerator::Export(UClass *Class, UFunction *Func)
+void FTsuCodeGenerator::Export(UClass *Class, UFunction *Function)
 {
     FString Args;
     UProperty *ReturnProperty = nullptr;
-    for(TFieldIterator<UProperty> PropIt(Func); PropIt; ++PropIt )
+    for(TFieldIterator<UProperty> PropIt(Function); PropIt; ++PropIt )
     {
         if ((*PropIt)->GetPropertyFlags() & CPF_ReturnParm)
         {
@@ -213,20 +218,20 @@ void FTsuCodeGenerator::Export(UClass *Class, UFunction *Func)
 
     if (ReturnProperty)
     {
-        WriteLine(TEXT("    public %s(%s): %s;"), *Func->GetName(), *Args, *PropertyType(ReturnProperty));
+        WriteLine(TEXT("    public %s(%s): %s;"), *Function->GetName(), *Args, *PropertyType(ReturnProperty));
     }
     else
     {
-        WriteLine(TEXT("    public %s(%s): void;"), *Func->GetName(), *Args);
+        WriteLine(TEXT("    public %s(%s): void;"), *Function->GetName(), *Args);
     }
 }
 
-void FTsuCodeGenerator::Export(UClass *Class, UProperty *Prop)
+void FTsuCodeGenerator::Export(UClass *Class, UProperty *Property)
 {
     WriteLine(
         TEXT("    public %s: %s;"),
-        *PropertyName(Prop),
-        *PropertyType(Prop)
+        *PropertyName(Property),
+        *PropertyType(Property)
     );
 }
 
@@ -252,9 +257,20 @@ void FTsuCodeGenerator::Export(UStruct *Struct)
         }
     }
 
+    for (TFieldIterator<UFunction> FuncIt(Struct); FuncIt; ++FuncIt)
+    {
+        if (CanExport(*FuncIt))
+        {
+            for(TFieldIterator<UProperty> PropIt(*FuncIt); PropIt; ++PropIt )
+            {
+                Prepare(*PropIt);
+            }
+        }
+    }
+
     if (Super)
     {
-        WriteLine(TEXT("declare class %s : %s {"), *StructName(Struct), *StructName(Super));
+        WriteLine(TEXT("declare class %s extends %s {"), *StructName(Struct), *StructName(Super));
     }
     else
     {
@@ -268,15 +284,23 @@ void FTsuCodeGenerator::Export(UStruct *Struct)
         }
     }
 
+    for (TFieldIterator<UFunction> FuncIt(Struct); FuncIt; ++FuncIt)
+    {
+        if (CanExport(*FuncIt))
+        {
+            Export(nullptr, *FuncIt);
+        }
+    }
+
     WriteLine(TEXT("}"));
 }
 
-void FTsuCodeGenerator::Export(UStruct *Struct, UProperty *Prop)
+void FTsuCodeGenerator::Export(UStruct *Struct, UProperty *Property)
 {
     WriteLine(
         TEXT("    public %s: %s;"),
-        *PropertyName(Prop),
-        *PropertyType(Prop)
+        *PropertyName(Property),
+        *PropertyType(Property)
     );
 }
 
@@ -315,38 +339,38 @@ const FString FTsuCodeGenerator::EnumName(UEnum* Enum)
     return Enum->CppType;
 }
 
-const FString FTsuCodeGenerator::FunctionName(UFunction* Func)
+const FString FTsuCodeGenerator::FunctionName(UFunction* Function)
 {
-    return Func->GetName();
+    return Function->GetName();
 }
 
-const FString FTsuCodeGenerator::PropertyType(UProperty *Prop)
+const FString FTsuCodeGenerator::PropertyType(UProperty *Property)
 {
-	if (auto StrProperty = Cast<UStrProperty>(Prop))
+	if (auto StrProperty = Cast<UStrProperty>(Property))
 	{
         return TEXT("string");
 	}
-	else if (auto NameProperty = Cast<UNameProperty>(Prop))
+	else if (auto NameProperty = Cast<UNameProperty>(Property))
 	{
         return TEXT("string");
 	}
-	else if (auto TextProperty = Cast<UTextProperty>(Prop))
+	else if (auto TextProperty = Cast<UTextProperty>(Property))
 	{
         return TEXT("string");
 	}
-	else if (auto BoolProperty = Cast<UBoolProperty>(Prop))
+	else if (auto BoolProperty = Cast<UBoolProperty>(Property))
 	{
         return TEXT("boolean");
 	}
-	else if (auto NumericProperty = Cast<UNumericProperty>(Prop))
+	else if (auto NumericProperty = Cast<UNumericProperty>(Property))
 	{
         return TEXT("number");
 	}
-	else if (auto EnumProperty = Cast<UEnumProperty>(Prop))
+	else if (auto EnumProperty = Cast<UEnumProperty>(Property))
 	{
         return EnumName(EnumProperty->GetEnum());
 	}
-	else if (auto ObjectProperty = Cast<UObjectPropertyBase>(Prop))
+	else if (auto ObjectProperty = Cast<UObjectPropertyBase>(Property))
 	{
         auto Class = ObjectProperty->PropertyClass;
         if (CanExport(Class))
@@ -355,12 +379,12 @@ const FString FTsuCodeGenerator::PropertyType(UProperty *Prop)
         }
         return TEXT("");
 	}
-	else if (auto StructProperty = Cast<UStructProperty>(Prop))
+	else if (auto StructProperty = Cast<UStructProperty>(Property))
 	{
         auto Struct = StructProperty->Struct;
         return StructName(Struct);
 	}
-	else if (auto ArrayProperty = Cast<UArrayProperty>(Prop))
+	else if (auto ArrayProperty = Cast<UArrayProperty>(Property))
 	{
         auto Type = PropertyType(ArrayProperty->Inner);
         if (!Type.IsEmpty())
@@ -369,7 +393,7 @@ const FString FTsuCodeGenerator::PropertyType(UProperty *Prop)
         }
         return TEXT("");
 	}
-	else if (auto SetProperty = Cast<USetProperty>(Prop))
+	else if (auto SetProperty = Cast<USetProperty>(Property))
 	{
         auto Type = PropertyType(SetProperty->ElementProp);
         if (!Type.IsEmpty())
@@ -378,7 +402,7 @@ const FString FTsuCodeGenerator::PropertyType(UProperty *Prop)
         }
         return TEXT("");
 	}
-	else if (auto MapProperty = Cast<UMapProperty>(Prop))
+	else if (auto MapProperty = Cast<UMapProperty>(Property))
 	{
         auto KeyType = PropertyType(MapProperty->KeyProp);
         auto ValueType = PropertyType(MapProperty->ValueProp);
@@ -392,12 +416,12 @@ const FString FTsuCodeGenerator::PropertyType(UProperty *Prop)
     return TEXT("");
 }
 
-const FString FTsuCodeGenerator::PropertyName(UProperty *Prop)
+const FString FTsuCodeGenerator::PropertyName(UProperty *Property)
 {
-    return Prop->GetName();
+    return Property->GetName();
 }
 
-const FString FTsuCodeGenerator::PropertyDefault(UProperty *Prop)
+const FString FTsuCodeGenerator::PropertyDefault(UProperty *Property)
 {
     return TEXT("");
 }
